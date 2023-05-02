@@ -43,7 +43,7 @@ class Dataset:
         sorted_stops = sorted(self.stops.values(), key=lambda x: x.get_average_delay() or 0, reverse=True)
         return sorted_stops[:num_stops]
 
- if __name__ == '__main__'
+if __name__ == '__main__'
 
     dataset = Dataset('Fahrzeiten_SOLL_IST_20230319_20230325.excerpt.csv')
     most_unreliable_stops = dataset.get_most_unreliable_stops(num_stops=10)
