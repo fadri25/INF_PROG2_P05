@@ -2,6 +2,7 @@ import csv
 #kommentar
 #neuer Kommentar
 # neuerer Kommentar
+# hihihi
 class Stop:
     def __init__(self, stop_id, name):
         self.stop_id = stop_id
@@ -215,7 +216,3 @@ if __name__ == "__main__":
 
     
 """
-
-# Kristina ist die beste 
-
-#lololo
