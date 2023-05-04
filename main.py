@@ -50,7 +50,7 @@ if __name__ == '__main__':
     print("The top 10 most unreliable stops are:")
     for stop in most_unreliable_stops:
         print(f"{stop.name} ({stop.stop_id}): average delay {stop.get_average_delay()} seconds, {stop.num_delays} delays in total.")
-
+        
 
 # Kristina ist die beste 
 
