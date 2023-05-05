@@ -1,218 +1,104 @@
-import csv
-#kommentar
-#neuer Kommentar
-# neuerer Kommentar
-# hihihi
-class Stop:
-    def __init__(self, stop_id, name):
-        self.stop_id = stop_id
-        self.name = name
-        self.num_delays = 0
-        self.total_delay = 0
-
-    def add_delay(self, delay):
-        self.num_delays += 1
-        self.total_delay += delay
-
-    def get_average_delay(self):
-        if self.num_delays > 0:
-            return self.total_delay / self.num_delays
-        else:
-            return None
-
-class Dataset:
-    def __init__(self, file_path):
-        self.stops = {}
-        with open(file_path) as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                stop_id = row['halt_diva_von']
-                if stop_id not in self.stops:
-                    self.stops[stop_id] = Stop(stop_id, row['halt_kurz_von1'])
-                delay = self.calculate_delay(row)
-                if delay:
-                    self.stops[stop_id].add_delay(delay)
-
-    def calculate_delay(self, row):
-        scheduled_arrival = row['soll_an_von']
-        actual_arrival = row['ist_an_von']
-        if actual_arrival and scheduled_arrival:
-            delay = int(actual_arrival) - int(scheduled_arrival)
-            return delay
-        else:
-            return None
-
-    def get_most_unreliable_stops(self, num_stops=10):
-        sorted_stops = sorted(self.stops.values(), key=lambda x: x.get_average_delay() or 0, reverse=True)
-        return sorted_stops[:num_stops]
-
-if __name__ == '__main__':
-
-    dataset = Dataset('Fahrzeiten_SOLL_IST_20230319_20230325.excerpt.csv')
-    most_unreliable_stops = dataset.get_most_unreliable_stops(num_stops=10)
-    print("The top 10 most unreliable stops are:")
-    for stop in most_unreliable_stops:
-        print(f"{stop.name} ({stop.stop_id}): average delay {stop.get_average_delay()} seconds, {stop.num_delays} delays in total.")
-        
-"""
 #################################################################################
 #   Autoren: Sarah, Kristina, Fadri
 #   Erstellungsdatum: 27.04.2023
 #   Beschreibung: INF_PROG2_P05
 #   Version: 1.4 (GVC)
-#   Letze Änderung: 04.05.2023
+#   Letze Änderung: 05.05.2023
 #################################################################################
+
+#(B) Report on the top 10 of most unreliable stops. Where should you never wait for your 
+#transportation?
+# Sollabfahrt von (technisch: soll_ab_von)
+# Istabfahrt von (technisch: ist_ab_von)
 
 import pandas as pd
 from datetime import datetime, timedelta
 import os
 import time
 import requests
-#import matplotlib.pyplot as plt
 import os.path
 
-class Downloader:
-    def __init__(self, url, file_path):
-        self.url = url
-        self.filename = file_path
+class TimestampConverter:
+    def __init__(self, df):
+        self.df = df # Dataframe einlesen in class
+        self.midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) # Mitternacht im Zeitformat generieren
         
-    def download(self, timeout=600):
+    def seconds_to_time(self, seconds):
+        return self.midnight + timedelta(seconds=seconds) # Umrechnung Sekunden in Zeit
+        
+    def convert_dataframe(self):
+        self.df['effective_soll'] = self.df['soll_ab_von'].apply(self.seconds_to_time) # Zeile hinzufügen mit Uhrzeit
+        self.df['effective_ist'] = self.df['ist_ab_von'].apply(self.seconds_to_time) # ''
+        return self.df # Ausgabe neues dataframe
+
+class Data:
+    def __init__(self, data):
+        self.file_path = data # Daten einlesen
+    
+    def data(self):
+        df = pd.read_csv(self.file_path) # Daten in Dataframe verpacken
+        df_vor = TimestampConverter(df) # daten in classe Timestampconverter einlesen
+        df = df_vor.convert_dataframe() # Umrechnung --> siehe class Timestampconverter
+        print(df)
+        return(df) # Ausgabe neues dataframe für berechnungen
+
+class Calculator:
+    def __init__(self, data):
+        self.data = data # Einlesen Daten
+        
+    def calculate(self):
+        stops = self.data['halt_diva_von'].unique() # Liste aller Haltestellen
+        delay_stop = {}
+        for stop in stops:
+            stop_data = self.data[self.data['halt_diva_von'] == stop] # Daten für diese Haltestelle filtern
+            delay = (stop_data['effective_soll'] - stop_data['effective_ist']).mean().total_seconds() #// 60 # Delay in Sekunden (mit // 60 in Minuten) mit berechnung von datetime-Objekten
+            delay_stop[stop] = delay # speichern der berechneten verspätung
+        
+        sorted_delays = sorted(delay_stop.items(), key=lambda x: x[1], reverse=True) # sortieren der Haltestellen nach Verspätung (absteigend)
+        top_unreliable_stops = sorted_delays[:10] # Die ersten zehn haltestellen bekommen
+        
+        for stop, delay in top_unreliable_stops: # Für die ersten zehn
+            print(f'Stop {stop}: average delay of {delay} seconds.') # Ausgabe
+        
+        # Erster Versuch (ohne delay ausgabe)
+        """    
+        df = self.data.dropna(subset=['effective_soll', 'effective_ist']) # Entfernt Zeilen wo keine Zeit steht
+        #df['delay_minutes'] = (df['effective_ist'] - df['effective_soll'])# / 60 Berechnung verspaetung
+        df['delay_seconds'] = (df['ist_ab_von'] - df['soll_ab_von']) # Delay in secunden
+        df_avg_delay = df.groupby('halt_diva_von')['delay_seconds'].mean().reset_index() # Durchschnittliche Verspätung für jeden Stop
+        df_sorted = df_avg_delay.sort_values(by='delay_seconds', ascending=False) # Sortieren um die ersten 10 identifizieren zu können
+        print('Top 10 most unreliable stops:') # Ausgabe erste 10
+        for halt_diva_von in df_sorted['halt_diva_von'][:10]:
+            print(halt_diva_von)
+        """
+
+class Downloader: # Downloader selbsterklärend vgl. P04?
+    def __init__(self, url, path):
+        self.url = url 
+        self.file_path = path
+        
+    def download(self, timeout=60000):
         try:
-            file_age = time.time() - os.path.getmtime(self.filename)
+            file_age = time.time() - os.path.getmtime(self.file_path)
             if file_age < timeout:
-                print(f'Using cached file: {self.filename}')
-                return file_path
+                print(f'Using cached file: {self.file_path}')
+                return self.file_path
             
             response = requests.get(self.url)
-            with open(self.filename, 'wb') as f:
+            with open(self.file_path, 'wb') as f:
                 f.write(response.content)
-            print(f'Downloaded file: {self.filename}')
+            print(f'Downloaded file: {self.file_path}')
+            return self.file_path
         except Exception as e:
             print(f'Error downloading file: {e}')
 
-
-class Vehicle:
-    def __init__(self, vehicle_id):
-        self.vehicle_id = vehicle_id
-        self.routes = {}
-    
-    def add_route(self, line, direction, route):
-        key = (line, direction)
-        if key not in self.routes:
-            self.routes[key] = []
-        self.routes[key].append(route)
-    
-    def get_delays(self):
-        delays = {}
-        for key, routes in self.routes.items():
-            planned_time = None
-            for route in routes:
-                for stop in route.stops:
-                    if stop.vehicle == self.vehicle_id:
-                        if planned_time is None:
-                            planned_time = stop.planned_arrival
-                        else:
-                            delay = stop.actual_arrival - planned_time
-                            if key not in delays:
-                                delays[key] = []
-                            delays[key].append(delay)
-        return delays
-    
-class Route:
-    def __init__(self, line, direction, course):
-        self.line = line
-        self.direction = direction
-        self.course = course
-        self.stops = []
-    
-    def add_stop(self, stop):
-        self.stops.append(stop)
-    
-class Stop:
-    def __init__(self, vehicle, line, direction, course, stop_id, planned_arrival, planned_arrival_time, actual_arrival, actual_arrival_time):
-        self.vehicle = vehicle
-        self.line = line
-        self.direction = direction
-        self.course = course
-        self.stop_id = stop_id
-        self.planned_arrival = pd.Timestamp(planned_arrival) # wie mit sekunden
-        self.actual_arrival = pd.Timestamp(actual_arrival) # same here
-        self.planned_arrival_time = TimestampConverter('soll_an_von') # timestamp converter
-        self.actual_arrival_time = TimestampConverter('ist_an_von')
-
-    def convert_timestamps(self):
-        self.planned_arrival = self.converter.seconds_to_time(self.planned_arrival)
-        self.actual_arrival = self.converter.seconds_to_time(self.actual_arrival)
-
-class TimestampConverter:
-    def __init__(self, timestamp_col):
-        self.timestamp_col = timestamp_col
-        self.midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        
-    def seconds_to_time(self, seconds):
-        return self.midnight + timedelta(seconds=seconds)
-        
-    def convert_dataframe(self, df):
-        df['effective_time'] = df[self.timestamp_col].apply(self.seconds_to_time)
-        return df
-
-class MobilityDataset:
-    def __init__(self, file_path):
-        self.routes = {}
-        self.vehicles = {}
-        self.stops = []
-        self.load_dataset(file_path)
-    
-    def load_dataset(self, file_path):
-        df = pd.read_csv(file_path)
-        for _, row in df.iterrows():
-            vehicle_id = row['fahrzeug'] # Fahrzeugnummer
-            line = row['linie'] # VBZ Liniennummer
-            direction = row['richtung'] # Richtung der Fahrt 1/2
-            course = row['kurs'] # Kursnummer, relevant?
-            stop_id = row['halt_diva_von'] # VBZ intern Haltestellennummer "von"
-            planned_arrival = row['soll_an_von'] # Sollankunft (Werte zwischen 0 und 86399)
-            actual_arrival = row['ist_an_von'] # Effektive Ankunft (kann werte drüber enthalten wegen verspätung)
-            planned_arrival_time = row['']
-            actual_arrival_time = row['']
-            
-            if vehicle_id not in self.vehicles:
-                self.vehicles[vehicle_id] = Vehicle(vehicle_id)
-            vehicle = self.vehicles[vehicle_id]
-            
-            key = (line, direction)
-            if key not in self.routes:
-                self.routes[key] = {}
-            if course not in self.routes[key]:
-                self.routes[key][course] = Route(line, direction, course)
-            route = self.routes[key][course]
-            
-            stop = Stop(vehicle_id, line, direction, course, stop_id, planned_arrival, planned_arrival_time, actual_arrival, actual_arrival_time )
-            route.add_stop(stop)
-            self.stops.append(stop)
-            vehicle.add_route(line, direction, route)
-    
-    def get_delays_by_line_and_direction(self, line, direction):
-        delays = {}
-        for vehicle in self.vehicles.values():
-            for key, value in vehicle.get_delays().items():
-                if key == (line, direction):
-                    if key not in delays:
-                        delays[key] = []
-                    delays[key].extend(value)
-        return delays
-        # wenn kein delay return none   
-
-if __name__ == "__main__":
-    #downloader = DataDownloader('https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230319_20230325.csv')
-    #data = Download('https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230319_20230325.csv')   
-    #dataset = MobilityDataset(downloader)
+if __name__ == '__main__':
+    # Alle variablen die man braucht
     url = 'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230319_20230325.csv'
-    file_path = r'C:\Users\fadri\Downloads\Fahrzeiten_SOLL_IST_20230319_20230325.csv'
-    downloader = Downloader(url, file_path)
-    df = downloader.download()
-    delays = df.get_delays_by_line_and_direction(10, 1)
-    print(delays)
-
-    
-"""
+    path = r'C:\Users\fadri\Downloads\Fahrzeiten_SOLL_IST_20230319_20230325.csv'
+    downloader = Downloader(url, path)
+    data = downloader.download()
+    data_path = Data(data)
+    dataframe = data_path.data()
+    calculator = Calculator(dataframe)
+    calculator.calculate()
