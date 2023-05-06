@@ -100,6 +100,8 @@ class Downloader: # Downloader selbsterklärend vgl. P04?
         self.file_path = "daten.csv"
         
     def download(self, timeout=60000):
+        #Idee --> wir downloaden ein file und cachen das unter einem namen
+        #schlussendlich wird nur der name übergeben und der wird als relativer pfad verwendet
         try:
             file_age = time.time() - os.path.getmtime(self.file_path)
             if file_age < timeout:
