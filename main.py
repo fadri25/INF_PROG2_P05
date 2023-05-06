@@ -11,8 +11,11 @@
 # Sollabfahrt von (technisch: soll_ab_von)
 # Istabfahrt von (technisch: ist_ab_von)
 # Namen geben --> RailFlow?
-#sarah ist duuummm
-# Test Kristina
+
+# -------Aufgaben
+# Filepath nicht mitgegeben sondern caching -> Sarah
+# Visualisieren probieren -> Fadri
+# Kristina -> code verstehen
 
 import pandas as pd
 from datetime import datetime, timedelta
