@@ -13,7 +13,7 @@
 # Namen geben --> RailFlow?
 
 # -------Aufgaben
-# Filepath nicht mitgegeben sondern caching -> Sarah
+# Filepath nicht mitgegeben sondern caching -> Sarah -> DONE
 # Visualisieren probieren -> Fadri
 # Kristina -> code verstehen
 
@@ -71,7 +71,6 @@ class Calculator:
         df_haltestellen = pd.read_csv("Haltestelle.csv")
         
         for stop, delay in top_unreliable_stops: # Für die ersten zehn
-            #print(f'Stop {stop}: average delay of {round(delay,2)} seconds.') # Ausgabe der gerundeten Zeiten
             matching_row = df_haltestellen.loc[df_haltestellen['halt_diva'] == stop] #filtern nach wo stimmen zahlen überein
             if not matching_row.empty:
                 stop = matching_row['halt_lang'].values[0]  #values damit es name anzeigt und nicht spalte aus matching row
