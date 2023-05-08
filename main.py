@@ -14,7 +14,7 @@
 
 # -------Aufgaben
 # Filepath nicht mitgegeben sondern caching -> Sarah -> DONE
-# Visualisieren probieren -> Fadri
+# Visualisieren probieren -> Fadri -> DONE, schöner?
 # Kristina -> code verstehen
 
 import pandas as pd
@@ -24,7 +24,8 @@ import time
 import requests
 import os.path
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import *
+from tkinter import ttk
 import urllib.request as ur
 #import tensorflow as tf?
 
@@ -58,6 +59,7 @@ class Calculator:
     def calculate(self):
         stops = self.data['halt_diva_von'].unique() # Liste aller Haltestellen
         delay_stop = {}
+        results = []
         for stop in stops:
             stop_data = self.data[self.data['halt_diva_von'] == stop] # Daten für diese Haltestelle filtern
             delay = (stop_data['effective_soll'] - stop_data['effective_ist']).mean().total_seconds() #// 60 # Delay in Sekunden (mit // 60 in Minuten) mit berechnung von datetime-Objekten
@@ -67,43 +69,46 @@ class Calculator:
         #for stop, delay in sorted_delays:
             #print(f'Stop {stop} average delay {delay:.2f} seconds')
         #time.sleep(10)
-        top_unreliable_stops = sorted_delays[:10] # Die ersten zehn haltestellen bekommen
+        unreliable_stops = sorted_delays 
         df_haltestellen = pd.read_csv("Haltestelle.csv")
         
-        for stop, delay in top_unreliable_stops: # Für die ersten zehn
-            matching_row = df_haltestellen.loc[df_haltestellen['halt_diva'] == stop] #filtern nach wo stimmen zahlen überein
+        for stop, delay in unreliable_stops:
+            matching_row = df_haltestellen.loc[df_haltestellen['halt_diva'] == stop] #filtern wo stimmen zahlen überein
+            if not matching_row.empty:
+                stop = matching_row['halt_lang'].values[0]  #values damit es name anzeigt und nicht spalte aus matching row
+                results.append({'stop': stop, 'delay': delay})
+        
+        top_unreliable_stops = sorted_delays[:10] # Top ten für ausgabe
+        for stop, delay in top_unreliable_stops:
+            matching_row = df_haltestellen.loc[df_haltestellen['halt_diva'] == stop] #filtern wo stimmen zahlen überein
             if not matching_row.empty:
                 stop = matching_row['halt_lang'].values[0]  #values damit es name anzeigt und nicht spalte aus matching row
                 print(f'{stop}: average delay of {delay:.2f} seconds.')
-
-        #show = Visualization(delay_stop)
-        #app = Visualization()
-        #app.mainloop()
         
-        # Tabelle mit verzögerungen ausgeben --> Ausgegeben!! ziehe z. 60-63
+        return pd.DataFrame(results)                
         
-class Visualization(tk.Tk):
-    def __init__(self):
-        super().__init__()
-
-        self.title('Railflow')
-        self.geometry('300x50')
-
-        self.label = tk.Label(self, text='Test label')
-        self.label.pack()
-        
-        self.button = tk.Button(self, text='Button')
-        self.button['command'] = self.button_clicked
-        self.button.pack()
+class Visualization(tk.Frame):
+    def __init__(self, master=None, dataframe=None, title=''):
+        super().__init__(master)
+        self.master = master
+        self.dataframe = dataframe
+        self.title = title
+        self.create_widgets()
     
-    def button_clicked(self):
-        messagebox.showinfo(title='Information', message='Hello TKINTER!!!')
+    def create_widgets(self):
+        title_label = tk.Label(self, text=self.title)
+        title_label.pack(side="top", fill="x", pady=10)
+
+        treeview = tk.ttk.Treeview(self, columns=list(self.dataframe.columns), show='headings')
+        for col in list(self.dataframe.columns):
+            treeview.heading(col, text=col)
+        for index, row in self.dataframe.iterrows():
+            treeview.insert("", tk.END, values=list(row))
+        treeview.pack(side="left", fill="both", expand=True)
         
-    def structure_data(self):  
-        pass
-    
-    def show(self):
-        pass
+        scrollbar = tk.Scrollbar(self, orient="vertical", command=treeview.yview)
+        scrollbar.pack(side="right", fill="y")
+        treeview.configure(yscrollcommand=scrollbar.set)
 
 class Downloader: # Downloader vgl. P04
     def __init__(self, url):
@@ -145,4 +150,10 @@ if __name__ == '__main__':
     data_path = Data(data)
     dataframe = data_path.data()
     calculator = Calculator(dataframe)
-    calculator.calculate()
+    df = calculator.calculate()
+    
+    # Data vizualisation ~aufruf in class?
+    root = tk.Tk()
+    df_visualizer = Visualization(master=root, dataframe=df, title='RailFlow')
+    df_visualizer.pack(fill="both", expand=True)
+    root.mainloop()
