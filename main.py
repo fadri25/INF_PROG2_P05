@@ -11,8 +11,6 @@
 # Sollabfahrt von (technisch: soll_ab_von)
 # Istabfahrt von (technisch: ist_ab_von)
 # Namen geben --> RailFlow?
-#sarah ist duuummm
-# Test Kristina
 
 import pandas as pd
 from datetime import datetime, timedelta
@@ -125,7 +123,6 @@ if __name__ == '__main__':
     url = 'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230319_20230325.csv'
     downloader = Downloader(url)
     data = downloader.download()
-    
     data_path = Data(data)
     dataframe = data_path.data()
     calculator = Calculator(dataframe)
