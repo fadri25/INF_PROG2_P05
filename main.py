@@ -27,7 +27,9 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 import urllib.request as ur
-#import tensorflow as tf?
+import tensorflow as tf # pip install tensorflow
+import matplotlib.pyplot as plt # pip instal matplotlib
+
 
 class TimestampConverter:
     def __init__(self, df):
@@ -106,6 +108,18 @@ class Visualization(tk.Frame):
         scrollbar = tk.Scrollbar(self, orient="vertical", command=treeview.yview)
         scrollbar.pack(side="right", fill="y")
         treeview.configure(yscrollcommand=scrollbar.set)
+        
+class Graph:
+    def __init__(self, master):
+        self.master = master
+        self.fig, self.ax = plt.subplots()
+        self.canvas = self.ax.figure.canvas
+
+    def plot_graph(self):
+        x = tf.linspace(-3.0, 3.0, 100)
+        y = tf.square(x)
+        self.ax.plot(x, y)
+        self.canvas.draw()
 
 class Downloader: # Downloader vgl. P04
     def __init__(self, url):
