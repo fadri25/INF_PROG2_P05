@@ -3,7 +3,7 @@
 #   Erstellungsdatum: 27.04.2023
 #   Beschreibung: INF_PROG2_P05
 #   Version: 1.4 (GVC)
-#   Letze Änderung: 05.05.2023
+#   Letze Änderung: 08.05.2023
 #################################################################################
 
 #(B) Report on the top 10 of most unreliable stops. Where should you never wait for your 
@@ -11,8 +11,11 @@
 # Sollabfahrt von (technisch: soll_ab_von)
 # Istabfahrt von (technisch: ist_ab_von)
 # Namen geben --> RailFlow?
-#sarah ist duuummm
-# Test Kristina
+
+# -------Aufgaben
+# Filepath nicht mitgegeben sondern caching -> Sarah -> DONE
+# Visualisieren probieren -> Fadri
+# Kristina -> code verstehen
 
 import pandas as pd
 from datetime import datetime, timedelta
@@ -132,7 +135,13 @@ if __name__ == '__main__':
     url = 'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230319_20230325.csv'
     downloader = Downloader(url)
     data = downloader.download()
-    
+
+    #downloaden de datensets Haltestellen
+    url_haltestelle = "https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Haltestelle.csv"
+    haltestellen_downlaoder = Downloader(url_haltestelle)
+    haltestelle_data = haltestellen_downlaoder.download()
+
+    #aufrufen der Klassen und Methoden zum auswerten
     data_path = Data(data)
     dataframe = data_path.data()
     calculator = Calculator(dataframe)
