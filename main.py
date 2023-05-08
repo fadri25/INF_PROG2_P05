@@ -66,9 +66,6 @@ class Calculator:
             delay_stop[stop] = delay # speichern der berechneten verspätung
 
         sorted_delays = sorted(delay_stop.items(), key=lambda x: x[1], reverse=True) # sortieren der Haltestellen nach Verspätung (absteigend)
-        #for stop, delay in sorted_delays:
-            #print(f'Stop {stop} average delay {delay:.2f} seconds')
-        #time.sleep(10)
         unreliable_stops = sorted_delays 
         df_haltestellen = pd.read_csv("Haltestelle.csv")
         
