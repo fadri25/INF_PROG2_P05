@@ -1,4 +1,5 @@
-#################################################################################
+
+    #################################################################################
 #   Autoren: Sarah, Kristina, Fadri
 #   Erstellungsdatum: 27.04.2023
 #   Beschreibung: INF_PROG2_P05
@@ -13,21 +14,19 @@
 # Namen geben --> RailFlow?
 
 # -------Aufgaben
-# Filepath nicht mitgegeben sondern caching -> Sarah -> DONE
-# Visualisieren probieren -> Fadri -> DONE, schöner?
+# Visualisieren probieren -> Fadri -> Visualisierung schöner
 # Kristina -> code verstehen
+# Vielleicht noch 
 
 import pandas as pd
 from datetime import datetime, timedelta
 import os
 import time
-import requests
 import os.path
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 import urllib.request as ur
-import tensorflow as tf # pip install tensorflow
 import matplotlib.pyplot as plt # pip instal matplotlib
 
 
@@ -84,42 +83,75 @@ class Calculator:
                 stop = matching_row['halt_lang'].values[0]  #values damit es name anzeigt und nicht spalte aus matching row
                 print(f'{stop}: average delay of {delay:.2f} seconds.')
         
-        return pd.DataFrame(results)                
+        return pd.DataFrame(results)               
         
 class Visualization(tk.Frame):
-    def __init__(self, master=None, dataframe=None, title=''):
-        super().__init__(master)
-        self.master = master
-        self.dataframe = dataframe
-        self.title = title
+    def __init__(self, dataframe=None, title=''):
+        #super().__init__()
+        self.root = tk.Tk()
+        self.root.dataframe = dataframe
+        self.root.title = title
         self.create_widgets()
+        self.create_button_close()
+        self.create_button_graphics()
+        self.root.mainloop()
     
     def create_widgets(self):
-        title_label = tk.Label(self, text=self.title)
+        title_label = tk.Label(self.root, text=self.root.title)
         title_label.pack(side="top", fill="x", pady=10)
 
-        treeview = tk.ttk.Treeview(self, columns=list(self.dataframe.columns), show='headings')
-        for col in list(self.dataframe.columns):
+        treeview = tk.ttk.Treeview(self.root, columns=list(self.root.dataframe.columns), show='headings')
+        for col in list(self.root.dataframe.columns):
             treeview.heading(col, text=col)
-        for index, row in self.dataframe.iterrows():
+        for index, row in self.root.dataframe.iterrows():
             treeview.insert("", tk.END, values=list(row))
         treeview.pack(side="left", fill="both", expand=True)
         
-        scrollbar = tk.Scrollbar(self, orient="vertical", command=treeview.yview)
+        scrollbar = tk.Scrollbar(self.root, orient="vertical", command=treeview.yview)
         scrollbar.pack(side="right", fill="y")
         treeview.configure(yscrollcommand=scrollbar.set)
+    
+    def create_button_graphics(self):
+        title_button = tk.Button(self.root, text="Balekndiagramm")
+        title_button.pack(side="bottom", fill="x", pady=10)
         
-class Graph:
-    def __init__(self, master):
-        self.master = master
-        self.fig, self.ax = plt.subplots()
-        self.canvas = self.ax.figure.canvas
+    def create_button_close(self):
+        title_button = tk.Button(self.root, text="Schliessen", command=self.close)
+        title_button.pack(side="bottom", pady=10)
+    
+    def close(self):
+        self.root.destroy()
 
-    def plot_graph(self):
-        x = tf.linspace(-3.0, 3.0, 100)
-        y = tf.square(x)
-        self.ax.plot(x, y)
-        self.canvas.draw()
+# Neue Berechnungen für Plots integrieren
+# Barplot für die ersten zehn -> funktioniert noch nicht
+class Barplot:
+    def __init__(self, dataframe) -> None:
+        self.df = dataframe
+    
+    def create_barplot():
+        #var = dataframe.grouby('###').###.sum()
+        fig = plt.figure()
+        ax = fig.add_subplot(1,1,1)
+        ax.set_xlabel('Funktion')
+        ax.set_ylabel('Umsatz in Summe')
+        ax.set_title('Umsatzvolumen nach Funktion der Filialen')
+        #var.plot(kind='bar')
+        plt.show()
+        
+# Lineplot soll für jede Station gemacht werden können per Knopf oder suche? -> funktioniert noch nicht  
+class Lineplot:
+    def __init__(self, dataframe):
+        self.df = dataframe
+    
+    def create_lineplot(self):
+        var = dataframe.groupby('Standort').Umsatz.sum()
+        fig = plt.figure()
+        ax1 = fig.add_subplot(1,1,1)
+        ax1.set_xlabel('Umsatz')
+        ax1.set_ylabel('Standort')
+        var.plot(kind='line')
+        plt.show()
+
 
 class Downloader: # Downloader vgl. P04
     def __init__(self, url):
@@ -163,8 +195,6 @@ if __name__ == '__main__':
     calculator = Calculator(dataframe)
     df = calculator.calculate()
     
-    # Data vizualisation ~aufruf in class?
-    root = tk.Tk()
-    df_visualizer = Visualization(master=root, dataframe=df, title='RailFlow')
-    df_visualizer.pack(fill="both", expand=True)
-    root.mainloop()
+    # Data vizualisation
+    df_visualizer = Visualization(dataframe=df, title='RailFlow')
+    #df_visualizer.pack(fill="both", expand=True)
