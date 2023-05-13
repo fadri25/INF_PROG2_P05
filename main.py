@@ -14,9 +14,15 @@
 # Namen geben --> RailFlow?
 
 # -------Aufgaben
-# Visualisieren probieren -> Fadri -> Visualisierung schöner
+# Fadri
+# Visualisierung schöner
+# Downloader ergänzen mit mehreren Urls zum übergeben
+# Daten auswählen von bestimmten Datum
+
+#Sarah
+#vergleichen von den zwei Datensätzen einbauen
 # Kristina -> code verstehen
-# Vielleicht noch 
+
 
 import pandas as pd
 from datetime import datetime, timedelta
@@ -234,6 +240,7 @@ class Lineplot:
 
 
 class Downloader: # Downloader vgl. P04
+    #neu ein Array mitgeben mit Urls die dann downloaed werden in einer Schleife 
     def __init__(self, url):
         self.url = url 
         self.file_name = os.path.basename(url) #definiert den Namen des Dokuments so wie die url basis
