@@ -25,7 +25,7 @@
 
 
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import os
 import time
 import os.path
@@ -266,28 +266,44 @@ class Downloader: # Downloader vgl. P04
         return file_path        
     
 if __name__ == '__main__':
+    date1 = input("Geben Sie die erste Woche vom vergleich an (leer lassen für aktuelles Datum): ") 
+    if date1 is not None:
+        date1_obj = datetime.strptime(date1, f'%d.%m.%Y')
+        sunday = date1_obj - datetime.timedelta(days=date1_obj.weekday() + 1)
+        saturday = sunday + datetime.timedelta(days=6)
+        formated_sunday1 = sunday.strftime(f'%Y%m%d')
+        formated_saturday1 = saturday.strftime(f'%Y%m%d')
+    else:
+        # same berechnung wie oben für aktuelles Datum
+        formated_date1 = time.strftime(f"%Y%m%d")
+    
+    # Same wie date1 machen
+    date2 = input("Geben Sie die zweite Woche vom Datensatz an (leer lassen um keinen Vergleich zu generieren): ")
+    if date2 is not None:
+        date2_obj = datetime.strptime(date2, f'%d.%m.%Y')
+        formated_date2 = date2_obj.strftime(f'%Y%m%d')
+    else: 
+        formated_date2 = None
+    
     # Alle variablen die man braucht
-
-    #downloaden des datensets
-    url = 'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230319_20230325.csv'
-    downloader = Downloader(url)
-    data = downloader.download()
-
-    #zweiter Datensatz -> geht nicht mit url, nimmt gleiches dokument
-    url2 = 'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230108_20230114.csv'
-    downloader2 = Downloader(url2)
-    data2 = downloader.download()
-
-    #downloaden de datensets Haltestellen
-    url_haltestelle = "https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Haltestelle.csv"
-    haltestellen_downlaoder = Downloader(url_haltestelle)
-    haltestelle_data = haltestellen_downlaoder.download()
-
-    #aufrufen der Klassen und Methoden zum auswerten
-    data_path = Data(data)
-    dataframe = data_path.data()
-    calculator = Calculator(dataframe)
-    df = calculator.calculate()
+    urls = [
+            'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230319_20230325.csv',
+            'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230108_20230114.csv',
+             "https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Haltestelle.csv"
+    ]
+    for url in urls:
+        downloader = Downloader(url)
+        file_path= downloader.download()
+        if 'Fahrzeiten_SOLL_IST_20230319_20230325.csv' in file_path:
+            data_path = Data(file_path)
+            dataframe = data_path.data()
+            calculator = Calculator(dataframe)
+            df = calculator.calculate()
+        elif 'Fahrzeiten_SOLL_IST_20230108_20230114.csv' in file_path:
+            data_path = Data(file_path)
+            dataframe = data_path.data()
+            calculator = Calculator(dataframe)
+            df = calculator.calculate()
     
     # Data vizualisation
     #root = tk.Tk()
