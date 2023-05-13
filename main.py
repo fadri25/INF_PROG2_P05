@@ -1,5 +1,5 @@
 
-    #################################################################################
+#################################################################################
 #   Autoren: Sarah, Kristina, Fadri
 #   Erstellungsdatum: 27.04.2023
 #   Beschreibung: INF_PROG2_P05
@@ -26,6 +26,9 @@ import os.path
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
+import tkinter.font as tkFont
+from tkinter import filedialog
+from PIL import ImageTk, Image
 import urllib.request as ur
 import matplotlib.pyplot as plt # pip instal matplotlib
 
@@ -81,7 +84,7 @@ class Calculator:
             matching_row = df_haltestellen.loc[df_haltestellen['halt_diva'] == stop] #filtern wo stimmen zahlen überein
             if not matching_row.empty:
                 stop = matching_row['halt_lang'].values[0]  #values damit es name anzeigt und nicht spalte aus matching row
-                print(f'{stop}: average delay of {delay:.2f} seconds.')
+                #print(f'{stop}: average delay of {delay:.2f} seconds.')
         
         return pd.DataFrame(results)               
         
@@ -91,9 +94,10 @@ class Visualization(tk.Frame):
         self.root = tk.Tk()
         self.root.dataframe = dataframe
         self.root.title = title
-        self.create_widgets()
+        #self.create_widgets()
         self.create_button_close()
-        self.create_button_graphics()
+        self.create_button_barplot()
+        self.create_button_lineplot()
         self.root.mainloop()
     
     def create_widgets(self):
@@ -110,9 +114,14 @@ class Visualization(tk.Frame):
         scrollbar = tk.Scrollbar(self.root, orient="vertical", command=treeview.yview)
         scrollbar.pack(side="right", fill="y")
         treeview.configure(yscrollcommand=scrollbar.set)
+
     
-    def create_button_graphics(self):
+    def create_button_barplot(self):
         title_button = tk.Button(self.root, text="Balekndiagramm")
+        title_button.pack(side="bottom", fill="x", pady=10)
+    
+    def create_button_lineplot(self):
+        title_button = tk.Button(self.root, text="Verspätungen")
         title_button.pack(side="bottom", fill="x", pady=10)
         
     def create_button_close(self):
@@ -121,6 +130,77 @@ class Visualization(tk.Frame):
     
     def close(self):
         self.root.destroy()
+"""
+
+class App:
+    def __init__(self, root):
+        root.title("VBZ Delays")
+        width=500
+        height=200
+        screenwidth = root.winfo_screenwidth()
+        screenheight = root.winfo_screenheight()
+        alignstr = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
+        root.geometry(alignstr)
+        root.resizable(width=False, height=False)
+
+        b_delay=tk.Button(root)
+        b_delay["bg"] = "#f0f0f0"
+        ft = tkFont.Font(family='Times',size=10)
+        b_delay["font"] = ft
+        b_delay["fg"] = "#000000"
+        b_delay["justify"] = "center"
+        b_delay["text"] = "Verspätungen"
+        b_delay.place(x=30,y=150,width=103,height=30)
+        b_delay["command"] = self.b_delay_command
+
+        b_bar=tk.Button(root)
+        b_bar["bg"] = "#f0f0f0"
+        ft = tkFont.Font(family='Times',size=10)
+        b_bar["font"] = ft
+        b_bar["fg"] = "#000000"
+        b_bar["justify"] = "center"
+        b_bar["text"] = "Balkendiagramm"
+        b_bar.place(x=200,y=150,width=104,height=30)
+        b_bar["command"] = self.b_bar_command
+
+        b_close=tk.Button(root)
+        b_close["bg"] = "#f0f0f0"
+        ft = tkFont.Font(family='Times',size=10)
+        b_close["font"] = ft
+        b_close["fg"] = "#000000"
+        b_close["justify"] = "center"
+        b_close["text"] = "Schliessen"
+        b_close.place(x=360,y=150,width=103,height=30)
+        b_close["command"] = self.b_close_command
+
+        l_background=tk.Label(root)
+        l_background.place(x=0,y=0,width=501,height=195)
+        ft = tkFont.Font(family='Times',size=10)
+        l_background["font"] = ft
+        l_background["fg"] = "#333333"
+        l_background["justify"] = "center"
+        l_background["text"] = "label"
+        l_background.place(x=0,y=0,width=501,height=195)
+        
+        l_delay=tk.Label(root)
+        ft = tkFont.Font(family='Times',size=23)
+        l_delay["font"] = ft
+        l_delay["fg"] = "#333333"
+        l_delay["justify"] = "center"
+        l_delay["text"] = "VBZ Verspätungen"
+        l_delay.place(x=100,y=20,width=321,height=30)
+
+    def b_delay_command(self):
+        print("command")
+
+
+    def b_bar_command(self):
+        print("command")
+
+
+    def b_close_command(self):
+        self.root.destroy()
+"""
 
 # Neue Berechnungen für Plots integrieren
 # Barplot für die ersten zehn -> funktioniert noch nicht
@@ -196,5 +276,8 @@ if __name__ == '__main__':
     df = calculator.calculate()
     
     # Data vizualisation
-    df_visualizer = Visualization(dataframe=df, title='RailFlow')
+    #root = tk.Tk()
+    #app = App(root)
+    #root.mainloop()
+    #df_visualizer = Visualization(dataframe=df, title='RailFlow')
     #df_visualizer.pack(fill="both", expand=True)
