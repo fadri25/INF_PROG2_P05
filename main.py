@@ -243,10 +243,12 @@ class Downloader: # Downloader vgl. P04
     #neu ein Array mitgeben mit Urls die dann downloaed werden in einer Schleife 
     def __init__(self, url):
         self.url = url 
-        self.file_name = os.path.basename(url) #definiert den Namen des Dokuments so wie die url basis
+        self.file_name = os.path.basename(url)
+        print (self.file_name) #definiert den Namen des Dokuments so wie die url basis
     
     def download(self, timeout = 60000):
         #wenn es nicht im cache ist oder mehr als 60000 Sekunden (10 Stunden) her ist-> daten neu holen
+        print (os.path.isfile(self.file_name))
         try: 
             if not os.path.isfile(self.file_name) or time.time() - os.stat(self.file_name).st_mtime > timeout:
                 print(f"\nLoading data from url {self.url}")
@@ -270,6 +272,11 @@ if __name__ == '__main__':
     url = 'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230319_20230325.csv'
     downloader = Downloader(url)
     data = downloader.download()
+
+    #zweiter Datensatz -> geht nicht mit url, nimmt gleiches dokument
+    url2 = 'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230108_20230114.csv'
+    downloader2 = Downloader(url2)
+    data2 = downloader.download()
 
     #downloaden de datensets Haltestellen
     url_haltestelle = "https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Haltestelle.csv"
