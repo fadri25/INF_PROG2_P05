@@ -84,7 +84,7 @@ class Calculator:
             matching_row = df_haltestellen.loc[df_haltestellen['halt_diva'] == stop] #filtern wo stimmen zahlen überein
             if not matching_row.empty:
                 stop = matching_row['halt_lang'].values[0]  #values damit es name anzeigt und nicht spalte aus matching row
-                #print(f'{stop}: average delay of {delay:.2f} seconds.')
+                print(f'{stop}: average delay of {delay:.2f} seconds.')
         
         return pd.DataFrame(results)               
         
