@@ -246,7 +246,7 @@ class Downloader: # Downloader vgl. P04
         self.file_name = os.path.basename(url)
         print (self.file_name) #definiert den Namen des Dokuments so wie die url basis
     
-    def download(self, timeout = 60000):
+    def download(self, timeout = 6000000):
         #wenn es nicht im cache ist oder mehr als 60000 Sekunden (10 Stunden) her ist-> daten neu holen
         print (os.path.isfile(self.file_name))
         try: 
@@ -263,43 +263,58 @@ class Downloader: # Downloader vgl. P04
             print(f'Error downloading file: {e}')
         
         file_path = os.path.abspath(self.file_name) #absoluter pfad vom cache file
-        return file_path        
+        return file_path   
+
+class Timespan:
+    def __init__(self, date_data):
+        self.date = date_data
+    
+    def calculate_time(self):
+        if self.date is not None:
+            date_obj = datetime.strptime(self.date, f'%d.%m.%Y')
+            sunday = date_obj - timedelta(days=date_obj.weekday() + 1)
+            saturday = sunday + timedelta(days=6)
+            formated_sunday = sunday.strftime(f'%Y%m%d')
+            formated_saturday = saturday.strftime(f'%Y%m%d')
+            return formated_sunday, formated_saturday
+        else:
+            today = date.today()
+            date_obj = datetime.strftime(today, f"%d.%m.%Y")
+            sunday = date_obj - timedelta(days=date_obj.weekday() + 1)
+            saturday = sunday + timedelta(days=6)
+            formated_sunday = sunday.strftime(f'%Y%m%d')
+            formated_saturday = saturday.strftime(f'%Y%m%d')
+            return formated_sunday, formated_saturday
     
 if __name__ == '__main__':
-    date1 = input("Geben Sie die erste Woche vom vergleich an (leer lassen für aktuelles Datum): ") 
-    if date1 is not None:
-        date1_obj = datetime.strptime(date1, f'%d.%m.%Y')
-        sunday = date1_obj - datetime.timedelta(days=date1_obj.weekday() + 1)
-        saturday = sunday + datetime.timedelta(days=6)
-        formated_sunday1 = sunday.strftime(f'%Y%m%d')
-        formated_saturday1 = saturday.strftime(f'%Y%m%d')
-    else:
-        # same berechnung wie oben für aktuelles Datum
-        formated_date1 = time.strftime(f"%Y%m%d")
     
-    # Same wie date1 machen
-    date2 = input("Geben Sie die zweite Woche vom Datensatz an (leer lassen um keinen Vergleich zu generieren): ")
-    if date2 is not None:
-        date2_obj = datetime.strptime(date2, f'%d.%m.%Y')
-        formated_date2 = date2_obj.strftime(f'%Y%m%d')
+    #start_date = input("Geben Sie die erste Woche vom vergleich an (leer lassen für aktuelles Datum dd.mm.yyyy): ") 
+    #end_date = input("Geben Sie die zweite Woche vom Datensatz an (leer lassen um keinen Vergleich zu generieren): ")
+    start_date = "20.03.2023"
+    end_date = "10.01.2023"
+    start_date_obj = Timespan(start_date)
+    if end_date is not None:
+        end_date_obj = Timespan(end_date)
     else: 
-        formated_date2 = None
-    
-    # Alle variablen die man braucht
+        end_date_obj = None   
+    start_sunday, start_saturday = start_date_obj.calculate_time()
+    if end_date_obj is not None:
+        end_sunday, end_saturday = end_date_obj.calculate_time()
+
     urls = [
-            'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230319_20230325.csv',
-            'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230108_20230114.csv',
+            f'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_{start_sunday}_{start_saturday}.csv',
+            f'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_{end_sunday}_{end_saturday}.csv',
              "https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Haltestelle.csv"
     ]
     for url in urls:
         downloader = Downloader(url)
         file_path= downloader.download()
-        if 'Fahrzeiten_SOLL_IST_20230319_20230325.csv' in file_path:
+        if f'Fahrzeiten_SOLL_IST_{start_sunday}_{start_saturday}.csv' in file_path:
             data_path = Data(file_path)
             dataframe = data_path.data()
             calculator = Calculator(dataframe)
             df = calculator.calculate()
-        elif 'Fahrzeiten_SOLL_IST_20230108_20230114.csv' in file_path:
+        elif f'Fahrzeiten_SOLL_IST_{end_sunday}_{end_saturday}.csv' in file_path:
             data_path = Data(file_path)
             dataframe = data_path.data()
             calculator = Calculator(dataframe)
