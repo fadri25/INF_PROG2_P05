@@ -100,10 +100,8 @@ class Visualization(tk.Frame):
         self.root = tk.Tk()
         self.root.dataframe = dataframe
         self.root.title = title
-        #self.create_widgets()
+        self.create_widgets()
         self.create_button_close()
-        self.create_button_barplot()
-        self.create_button_lineplot()
         self.root.mainloop()
     
     def create_widgets(self):
@@ -120,15 +118,6 @@ class Visualization(tk.Frame):
         scrollbar = tk.Scrollbar(self.root, orient="vertical", command=treeview.yview)
         scrollbar.pack(side="right", fill="y")
         treeview.configure(yscrollcommand=scrollbar.set)
-
-    
-    def create_button_barplot(self):
-        title_button = tk.Button(self.root, text="Balekndiagramm")
-        title_button.pack(side="bottom", fill="x", pady=10)
-    
-    def create_button_lineplot(self):
-        title_button = tk.Button(self.root, text="Verspätungen")
-        title_button.pack(side="bottom", fill="x", pady=10)
         
     def create_button_close(self):
         title_button = tk.Button(self.root, text="Schliessen", command=self.close)
@@ -136,13 +125,12 @@ class Visualization(tk.Frame):
     
     def close(self):
         self.root.destroy()
-"""
 
 class App:
     def __init__(self, root):
         root.title("VBZ Delays")
-        width=500
-        height=200
+        width=504
+        height=195
         screenwidth = root.winfo_screenwidth()
         screenheight = root.winfo_screenheight()
         alignstr = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
@@ -156,7 +144,7 @@ class App:
         b_delay["fg"] = "#000000"
         b_delay["justify"] = "center"
         b_delay["text"] = "Verspätungen"
-        b_delay.place(x=30,y=150,width=103,height=30)
+        b_delay.place(x=140,y=150,width=103,height=30)
         b_delay["command"] = self.b_delay_command
 
         b_bar=tk.Button(root)
@@ -166,7 +154,7 @@ class App:
         b_bar["fg"] = "#000000"
         b_bar["justify"] = "center"
         b_bar["text"] = "Balkendiagramm"
-        b_bar.place(x=200,y=150,width=104,height=30)
+        b_bar.place(x=260,y=150,width=104,height=30)
         b_bar["command"] = self.b_bar_command
 
         b_close=tk.Button(root)
@@ -176,9 +164,20 @@ class App:
         b_close["fg"] = "#000000"
         b_close["justify"] = "center"
         b_close["text"] = "Schliessen"
-        b_close.place(x=360,y=150,width=103,height=30)
+        b_close.place(x=380,y=150,width=103,height=30)
         b_close["command"] = self.b_close_command
+        
+        b_dataframe=tk.Button(root)
+        b_dataframe["bg"] = "#f0f0f0"
+        ft = tkFont.Font(family='Times',size=10)
+        b_dataframe["font"] = ft
+        b_dataframe["fg"] = "#000000"
+        b_dataframe["justify"] = "center"
+        b_dataframe["text"] = "Datensätze"
+        b_dataframe.place(x=20,y=150,width=104,height=30)
+        b_dataframe["command"] = self.b_dataframe_command
 
+        """
         l_background=tk.Label(root)
         l_background.place(x=0,y=0,width=501,height=195)
         ft = tkFont.Font(family='Times',size=10)
@@ -186,7 +185,8 @@ class App:
         l_background["fg"] = "#333333"
         l_background["justify"] = "center"
         l_background["text"] = "label"
-        l_background.place(x=0,y=0,width=501,height=195)
+        l_background.place(x=0,y=0,width=132,height=107)
+        """
         
         l_delay=tk.Label(root)
         ft = tkFont.Font(family='Times',size=23)
@@ -196,17 +196,20 @@ class App:
         l_delay["text"] = "VBZ Verspätungen"
         l_delay.place(x=100,y=20,width=321,height=30)
 
+
     def b_delay_command(self):
         print("command")
-
 
     def b_bar_command(self):
         print("command")
 
-
     def b_close_command(self):
-        self.root.destroy()
-"""
+        root.destroy()
+
+    def b_dataframe_command(self):
+        df_visualizer = Visualization(dataframe=df, title='RailFlow')
+        df_visualizer.pack(fill="both", expand=True)
+        
 
 # Neue Berechnungen für Plots integrieren
 # Barplot für die ersten zehn -> funktioniert noch nicht
@@ -321,8 +324,6 @@ if __name__ == '__main__':
             df = calculator.calculate()
     
     # Data vizualisation
-    #root = tk.Tk()
-    #app = App(root)
-    #root.mainloop()
-    #df_visualizer = Visualization(dataframe=df, title='RailFlow')
-    #df_visualizer.pack(fill="both", expand=True)
+    root = tk.Tk()
+    app = App(root)
+    root.mainloop()
