@@ -18,6 +18,8 @@
 # Visualisierung schöner
 # Downloader ergänzen mit mehreren Urls zum übergeben
 # Daten auswählen von bestimmten Datum
+# Error handling:   - URL exisitiert nicht
+#                   - Datenverarbeitung Fehler
 
 #Sarah
 #vergleichen von den zwei Datensätzen einbauen
@@ -33,7 +35,6 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 import tkinter.font as tkFont
-from tkinter import filedialog
 from PIL import ImageTk, Image
 import urllib.request as ur 
 import matplotlib.pyplot as plt # pip instal matplotlib
@@ -242,6 +243,7 @@ class Lineplot:
         plt.show()
 
 
+
 class Downloader: # Downloader vgl. P04
     #neu ein Array mitgeben mit Urls die dann downloaed werden in einer Schleife 
     def __init__(self, url):
@@ -251,11 +253,9 @@ class Downloader: # Downloader vgl. P04
     
     def download(self, timeout = 6000000):
         #wenn es nicht im cache ist oder mehr als 60000 Sekunden (10 Stunden) her ist-> daten neu holen
-        print (os.path.isfile(self.file_name))
         try: 
             if not os.path.isfile(self.file_name) or time.time() - os.stat(self.file_name).st_mtime > timeout:
-                print(f"\nLoading data from url {self.url}. \n This may take a while if Files are large.")
-                filename = os.path.basename(self.url)
+                print(f"\nLoading data from url {self.url}. \n This may take a while if files are large.")
                 ur.urlretrieve(self.url, self.file_name)                
             else:
                 #datei wird aus cache geladen, read only
