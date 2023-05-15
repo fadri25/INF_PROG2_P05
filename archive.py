@@ -41,4 +41,26 @@ if __name__ == '__main__':
     # Alle variablen die man braucht
     url = 'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230319_20230325.csv'
     path = r'C:\Users\fadri\Downloads\Fahrzeiten_SOLL_IST_20230319_20230325.csv'
+
+
+    #downloaden des datensets
+    #url = 'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230319_20230325.csv'
+    #downloader = Downloader(url)
+    #data = downloader.download()
+
+    #zweiter Datensatz -> geht nicht mit url, nimmt gleiches dokument
+    #url2 = 'https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Fahrzeiten_SOLL_IST_20230108_20230114.csv'
+    #downloader2 = Downloader(url2)
+    #data2 = downloader.download()
+
+    #downloaden de datensets Haltestellen
+    #url_haltestelle = "https://data.stadt-zuerich.ch/dataset/vbz_fahrzeiten_ogd/download/Haltestelle.csv"
+    #haltestellen_downlaoder = Downloader(url_haltestelle)
+    #haltestelle_data = haltestellen_downlaoder.download()
+
+    #aufrufen der Klassen und Methoden zum auswerten
+    #data_path = Data(data)
+    #dataframe = data_path.data()
+    #calculator = Calculator(dataframe)
+    #df = calculator.calculate()
 """
