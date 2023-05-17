@@ -3,27 +3,31 @@
 #   Autoren: Sarah, Kristina, Fadri
 #   Erstellungsdatum: 27.04.2023
 #   Beschreibung: INF_PROG2_P05
-#   Version: 1.4 (GVC)
-#   Letze Änderung: 08.05.2023
+#   Version: 1.6 (GVC)
+#   Letze Änderung: 17.05.2023
 #################################################################################
 
 #(B) Report on the top 10 of most unreliable stops. Where should you never wait for your
 #transportation?
 # Sollabfahrt von (technisch: soll_ab_von)
 # Istabfahrt von (technisch: ist_ab_von)
-# Namen geben --> RailFlow?
+# Namen geben --> RailFlow
 
 # -------Aufgaben
 # Fadri
-# Visualisierung schöner
-# Downloader ergänzen mit mehreren Urls zum übergeben
-# Daten auswählen von bestimmten Datum
+# Downloader ergänzen mit mehreren Urls zum übergeben -> Done
+# Daten auswählen von bestimmten Datum -> Done
+# Calculation neuer algorithmus da mehr Berechnungen -> Done einige Berechnungen müssen noch angepasst werden
 # Error handling:   - URL exisitiert nicht
 #                   - Datenverarbeitung Fehler
+#                   --> möglicherweise konzept erarbeiten
+# Visualisierung schöner
 
-#Sarah
-#vergleichen von den zwei Datensätzen einbauen
-# Kristina -> code verstehen
+# Sarah
+#vergleichen von den zwei Datensätzen einbauen -> Done, Super Sarah!!
+
+# Kristina
+# code verstehen
 
 import os.path
 from datetime import datetime, timedelta, date
@@ -39,7 +43,7 @@ import urllib.request as ur
 import matplotlib.pyplot as plt
 from difflib import get_close_matches
 import pandas as pd
-
+import threading
 
 class TimestampConverter:
     def __init__(self, df):
@@ -100,7 +104,7 @@ class Calculator:
                
         
 class Visualization(tk.Frame):
-    def __init__(self, dataframe1, dataframe2, title1='1', title2='2'):
+    def __init__(self, dataframe1, dataframe2, title1, title2):
         super().__init__()
         #self.root = tk.Tk()
         self.dataframe1 = dataframe1
@@ -158,11 +162,11 @@ class Visualization(tk.Frame):
         title_button.pack(side="bottom", pady=10)
     
     def close(self):
-        self.destroy()
+        self.master.destroy()
 
 class App:
     def __init__(self, root):
-        root.title("VBZ Delays")
+        root.title("VBZ Verspätungen")
         width=504
         height=195
         screenwidth = root.winfo_screenwidth()
@@ -170,6 +174,7 @@ class App:
         alignstr = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
         root.geometry(alignstr)
         root.resizable(width=False, height=False)
+        self.loop_thread = None
 
         b_delay=tk.Button(root)
         b_delay["bg"] = "#f0f0f0"
@@ -233,8 +238,7 @@ class App:
     def b_delay_command(self):
         stops = Stops(dataframe).unique_stops()
         line_diagram = DataFrameLineDiagram(stops, data_delay1)
-        while True:
-            line_diagram.search('stop')
+        line_diagram.search('stop')
 
     def b_bar_command(self):
         visualizer = Barvisualizer(top_stops1)
@@ -244,7 +248,9 @@ class App:
         root.destroy()
 
     def b_dataframe_command(self):
-        df_visualizer = Visualization(dataframe1=df1, dataframe2=df2, title1='1', title2='2')
+        title1 =f'{start_sunday} - {start_saturday}'
+        title2 =f'{end_sunday} - {end_saturday}'
+        df_visualizer = Visualization(dataframe1=df1, dataframe2=df2, title1 = title1, title2= title2)
         df_visualizer.pack(fill="both", expand=True)
 
 class Barvisualizer:
@@ -268,43 +274,40 @@ class DataFrameLineDiagram:
         self.dataframe = dataframe
         self.df = df1
         self.search_results = []
-        
+        self.window = Tk()
+        self.window.title("")
+        self.label = Label(self.window, text="Haltestelle:")
+        self.label.pack()
+        self.entry = Entry(self.window)
+        self.entry.pack()
+        self.search_button = Button(self.window, text="Suchen", command=self.perform_search)
+        self.search_button.pack()
+        self.close_button = Button(self.window, text="Schliessen", command=self.close_window)
+        self.close_button.pack()
+
+    def perform_search(self):
+        search_term = self.entry.get()
+
+        # closest match -> lib?
+        matches = get_close_matches(search_term, self.dataframe['stop'])
+        if matches:
+            match = matches[0]
+            calc = Stop_calculation(self.df, match)
+            lineplot = calc.find_columns_with_same_value()
+            lineplot_sorted = lineplot.sort_values('effective_ist', ascending=False)
+            plt.plot(lineplot_sorted['effective_ist'], lineplot_sorted['delay'])
+            plt.xlabel('Zeit')
+            plt.ylabel('Verspätung')
+            plt.title(f'Verspätungen für {match}')
+            plt.show()
+        else:
+            messagebox.showinfo("Suchresultat", "Keine Haltestelle gefunden.")
+
+    def close_window(self):
+        self.window.destroy()
+
     def search(self, column):
-        def perform_search():
-            search_term = entry.get()
-            
-            # closest match -> lib?
-            matches = get_close_matches(search_term, self.dataframe[column])
-            if matches:
-                match = matches[0]
-                #self.search_results.append(match)
-                calc = Stop_calculation(self.df, match)
-                lineplot = calc.find_columns_with_same_value()
-                #lineplot['delay'] = lineplot['delay'].dt.total_seconds()
-                lineplot_sorted = lineplot.sort_values('effective_ist', ascending=False)
-                plt.plot(lineplot_sorted['effective_ist'], lineplot_sorted['delay'])
-                plt.xlabel('Zeit')
-                plt.ylabel('Verspätung')
-                plt.title(f'Verspätungen für {match}')
-                plt.show()
-            else:
-                messagebox.showinfo("Search Result", "No match found.")
-        
-        def close_window():
-            return False
-        
-        # Tkinter
-        window = tk.Tk()
-        window.title("DataFrame Line Diagram")
-        label = tk.Label(window, text="Search Term:")
-        label.pack()
-        entry = tk.Entry(window)
-        entry.pack()
-        search_button = tk.Button(window, text="Search", command=perform_search)
-        search_button.pack()
-        close_button = tk.Button(window, text="Close", command=close_window)
-        close_button.pack()
-        window.mainloop()
+        self.window.mainloop()
 
 class Stops:
     def __init__(self, data):
