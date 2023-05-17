@@ -159,7 +159,7 @@ class Visualization(tk.Frame):
         
     def create_button_close(self):
         title_button = tk.Button(self, text="Schliessen", command=self.close)
-        title_button.pack(side="bottom", pady=10)
+        title_button.pack(side="right", pady=10)
     
     def close(self):
         self.master.destroy()
@@ -174,7 +174,13 @@ class App:
         alignstr = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
         root.geometry(alignstr)
         root.resizable(width=False, height=False)
-        self.loop_thread = None
+        background_image = ImageTk.PhotoImage(Image.open("bushaltestelle.jpg"))
+        icon_path = "bus.png"
+        root.iconbitmap(icon_path)
+        
+        l_background=tk.Label(root, image=background_image)
+        l_background.place(x=0, y=0, relwidth=1, relheight=1)
+        l_background.image = background_image
 
         b_delay=tk.Button(root)
         b_delay["bg"] = "#f0f0f0"
@@ -215,17 +221,6 @@ class App:
         b_dataframe["text"] = "Datensätze"
         b_dataframe.place(x=20,y=150,width=104,height=30)
         b_dataframe["command"] = self.b_dataframe_command
-
-        """
-        l_background=tk.Label(root)
-        l_background.place(x=0,y=0,width=501,height=195)
-        ft = tkFont.Font(family='Times',size=10)
-        l_background["font"] = ft
-        l_background["fg"] = "#333333"
-        l_background["justify"] = "center"
-        l_background["text"] = "label"
-        l_background.place(x=0,y=0,width=132,height=107)
-        """
         
         l_delay=tk.Label(root)
         ft = tkFont.Font(family='Times',size=23)
