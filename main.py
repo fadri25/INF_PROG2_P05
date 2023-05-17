@@ -7,7 +7,7 @@
 #   Letze Änderung: 08.05.2023
 #################################################################################
 
-#(B) Report on the top 10 of most unreliable stops. Where should you never wait for your 
+#(B) Report on the top 10 of most unreliable stops. Where should you never wait for your
 #transportation?
 # Sollabfahrt von (technisch: soll_ab_von)
 # Istabfahrt von (technisch: ist_ab_von)
@@ -25,19 +25,20 @@
 #vergleichen von den zwei Datensätzen einbauen
 # Kristina -> code verstehen
 
-
-import pandas as pd
+import os.path
 from datetime import datetime, timedelta, date
 import os
 import time
-import os.path
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 import tkinter.font as tkFont
 from PIL import ImageTk, Image
-import urllib.request as ur 
-import matplotlib.pyplot as plt # pip instal matplotlib
+import urllib.request as ur
+import matplotlib.pyplot as plt
+from difflib import get_close_matches
+import pandas as pd
 
 
 class TimestampConverter:
@@ -68,64 +69,96 @@ class Calculator:
         self.data = data # Einlesen Daten
         
     def calculate(self):
-        stops = self.data['halt_diva_von'].unique() # Liste aller Haltestellen
-        delay_stop = {}
+        #stops = self.data['halt_diva_von'] # Liste aller Haltestellen
+        #delay_stop = {}
         results = []
+        top_stops = []
+        data_delay = self.data
+        
+        df_haltestellen = pd.read_csv("Haltestelle.csv")
+        mapping_dict = df_haltestellen.set_index('halt_diva')['halt_lang'].to_dict()
+        data_delay['stop'] = data_delay['halt_diva_von'].map(mapping_dict)
+        data_delay['delay'] = (data_delay['effective_soll'] - data_delay['effective_ist'])
+        data_delay['delay'] = data_delay['delay'].dt.total_seconds()
+        data_delay = data_delay.sort_values('delay', ascending=False)
+        #sorted_delays = sorted(data_delay.items(), key=lambda x: x[1], reverse=True) # sortieren der Haltestellen nach Verspätung (absteigend)
+        
+        result = data_delay.groupby('stop')['delay'].mean() # Timedelta falls fehler
+        for stop, mean in result.items():
+            results.append({'stop': stop, 'delay': mean})
+        
+        top_unreliable_stops_sorted = data_delay.nlargest(10, 'delay')# Top ten für ausgabe
+        top_unreliable_stops = top_unreliable_stops_sorted[['stop', 'delay']].copy()
+
+        """
         for stop in stops:
             stop_data = self.data[self.data['halt_diva_von'] == stop] # Daten für diese Haltestelle filtern
             delay = (stop_data['effective_soll'] - stop_data['effective_ist']).mean().total_seconds() #// 60 # Delay in Sekunden (mit // 60 in Minuten) mit berechnung von datetime-Objekten
             delay_stop[stop] = delay # speichern der berechneten verspätung
-
-        sorted_delays = sorted(delay_stop.items(), key=lambda x: x[1], reverse=True) # sortieren der Haltestellen nach Verspätung (absteigend)
-        unreliable_stops = sorted_delays 
-        df_haltestellen = pd.read_csv("Haltestelle.csv")
-        
-        for stop, delay in unreliable_stops:
-            matching_row = df_haltestellen.loc[df_haltestellen['halt_diva'] == stop] #filtern wo stimmen zahlen überein
-            if not matching_row.empty:
-                stop = matching_row['halt_lang'].values[0]  #values damit es name anzeigt und nicht spalte aus matching row
-                results.append({'stop': stop, 'delay': delay})
-        
-        top_unreliable_stops = sorted_delays[:10] # Top ten für ausgabe
-        for stop, delay in top_unreliable_stops:
-            matching_row = df_haltestellen.loc[df_haltestellen['halt_diva'] == stop] #filtern wo stimmen zahlen überein
-            if not matching_row.empty:
-                stop = matching_row['halt_lang'].values[0]  #values damit es name anzeigt und nicht spalte aus matching row
-                print(f'{stop}: average delay of {delay:.2f} seconds.')
-        
-        return pd.DataFrame(results)               
+        """
+        return pd.DataFrame(results), pd.DataFrame(top_unreliable_stops), pd.DataFrame(data_delay)
+               
         
 class Visualization(tk.Frame):
-    def __init__(self, dataframe=None, title=''):
-        #super().__init__()
-        self.root = tk.Tk()
-        self.root.dataframe = dataframe
-        self.root.title = title
+    def __init__(self, dataframe1, dataframe2, title1='1', title2='2'):
+        super().__init__()
+        #self.root = tk.Tk()
+        self.dataframe1 = dataframe1
+        self.dataframe2 = dataframe2
+        self.title1 = title1
+        self.title2 = title2
         self.create_widgets()
         self.create_button_close()
-        self.root.mainloop()
-    
+        self.master.geometry("800x600")
+        #self.root.mainloop()
+      
     def create_widgets(self):
-        title_label = tk.Label(self.root, text=self.root.title)
-        title_label.pack(side="top", fill="x", pady=10)
-
-        treeview = tk.ttk.Treeview(self.root, columns=list(self.root.dataframe.columns), show='headings')
-        for col in list(self.root.dataframe.columns):
-            treeview.heading(col, text=col)
-        for index, row in self.root.dataframe.iterrows():
-            treeview.insert("", tk.END, values=list(row))
-        treeview.pack(side="left", fill="both", expand=True)
+        # Dataframe 1
+        frame = tk.Frame(self)
+        frame.pack(side="left", fill="both", expand=True)
+        frame1 = tk.Frame(frame)
+        frame1.pack(side="left", fill="both", expand=True)
         
-        scrollbar = tk.Scrollbar(self.root, orient="vertical", command=treeview.yview)
+        title_label1 = tk.Label(frame1, text=self.title1)
+        title_label1.pack(side="top", fill="x", pady=10)
+        
+        treeview1 = tk.ttk.Treeview(frame1, columns=list(self.dataframe1.columns), show='headings')
+        for col in list(self.dataframe1.columns):
+            treeview1.heading(col, text=col)
+        for index, row in self.dataframe1.iterrows():
+            treeview1.insert("", tk.END, values=list(row))
+        treeview1.pack(side="left", fill="both", expand=True)
+        
+        # Dataframe 2
+        frame2 = tk.Frame(frame)
+        frame2.pack(side="left", fill="both", expand=True)
+        
+        title_label2 = tk.Label(frame2, text=self.title2)
+        title_label2.pack(side="top", fill="x", pady=10)
+        
+        treeview2 = tk.ttk.Treeview(frame2, columns=list(self.dataframe2.columns), show='headings')
+        for col in list(self.dataframe2.columns):
+            treeview2.heading(col, text=col)
+        for index, row in self.dataframe1.iterrows():  # Iterate over dataframe1 rows
+            treeview2.insert("", tk.END, values=list(row))  # Use dataframe1 row values
+        treeview2.pack(side="left", fill="both", expand=True)
+        scrollbar = tk.Scrollbar(frame, orient="vertical", command=self.on_scroll)
         scrollbar.pack(side="right", fill="y")
-        treeview.configure(yscrollcommand=scrollbar.set)
+
+        # treeview beide .... zusammen?
+        treeview1.configure(yscrollcommand=scrollbar.set)
+        treeview2.configure(yscrollcommand=scrollbar.set)
+        
+    def on_scroll(self, *args):
+        for treeview in self.winfo_children()[0].winfo_children():
+            treeview.yview(*args)
         
     def create_button_close(self):
-        title_button = tk.Button(self.root, text="Schliessen", command=self.close)
+        title_button = tk.Button(self, text="Schliessen", command=self.close)
         title_button.pack(side="bottom", pady=10)
     
     def close(self):
-        self.root.destroy()
+        self.destroy()
 
 class App:
     def __init__(self, root):
@@ -197,55 +230,108 @@ class App:
         l_delay["text"] = "VBZ Verspätungen"
         l_delay.place(x=100,y=20,width=321,height=30)
 
-
     def b_delay_command(self):
-        print("command")
+        stops = Stops(dataframe).unique_stops()
+        line_diagram = DataFrameLineDiagram(stops, data_delay1)
+        while True:
+            line_diagram.search('stop')
 
     def b_bar_command(self):
-        print("command")
+        visualizer = Barvisualizer(top_stops1)
+        visualizer.plot_bar()
 
     def b_close_command(self):
         root.destroy()
 
     def b_dataframe_command(self):
-        df_visualizer = Visualization(dataframe=df, title='RailFlow')
+        df_visualizer = Visualization(dataframe1=df1, dataframe2=df2, title1='1', title2='2')
         df_visualizer.pack(fill="both", expand=True)
-        
 
-# Neue Berechnungen für Plots integrieren
-# Barplot für die ersten zehn -> funktioniert noch nicht
-class Barplot:
-    def __init__(self, dataframe) -> None:
-        self.df = dataframe
+class Barvisualizer:
+    def __init__(self, top_stops):
+        self.df = top_stops
     
-    def create_barplot():
-        #var = dataframe.grouby('###').###.sum()
-        fig = plt.figure()
-        ax = fig.add_subplot(1,1,1)
-        ax.set_xlabel('Funktion')
-        ax.set_ylabel('Umsatz in Summe')
-        ax.set_title('Umsatzvolumen nach Funktion der Filialen')
-        #var.plot(kind='bar')
-        plt.show()
-        
-# Lineplot soll für jede Station gemacht werden können per Knopf oder suche? -> funktioniert noch nicht  
-class Lineplot:
-    def __init__(self, dataframe):
-        self.df = dataframe
-    
-    def create_lineplot(self):
-        var = dataframe.groupby('Standort').Umsatz.sum()
-        fig = plt.figure()
-        ax1 = fig.add_subplot(1,1,1)
-        ax1.set_xlabel('Umsatz')
-        ax1.set_ylabel('Standort')
-        var.plot(kind='line')
+    def plot_bar(self):
+        x_values = self.df['stop']
+        y_values = self.df['delay']
+        plt.bar(x_values, y_values)
+        plt.xlabel('Haltestellen')
+        plt.ylabel('Verspätung')
+        plt.title('Top 10 Haltestellen')
+        plt.xticks(rotation=45) # Rotation um 45 der X-Achsenbeschriftung um lesen zu können
+        plt.tight_layout() # Anpassen um überlappungen vorzubeugen
+        plt.gca().xaxis.set_tick_params(pad=0) # Schrift ein wenig weiter nach links um es besser lesen zu können aber hä
         plt.show()
 
+class DataFrameLineDiagram:
+    def __init__(self, dataframe, df1):
+        self.dataframe = dataframe
+        self.df = df1
+        self.search_results = []
+        
+    def search(self, column):
+        def perform_search():
+            search_term = entry.get()
+            
+            # closest match -> lib?
+            matches = get_close_matches(search_term, self.dataframe[column])
+            if matches:
+                match = matches[0]
+                #self.search_results.append(match)
+                calc = Stop_calculation(self.df, match)
+                lineplot = calc.find_columns_with_same_value()
+                #lineplot['delay'] = lineplot['delay'].dt.total_seconds()
+                lineplot_sorted = lineplot.sort_values('effective_ist', ascending=False)
+                plt.plot(lineplot_sorted['effective_ist'], lineplot_sorted['delay'])
+                plt.xlabel('Zeit')
+                plt.ylabel('Verspätung')
+                plt.title(f'Verspätungen für {match}')
+                plt.show()
+            else:
+                messagebox.showinfo("Search Result", "No match found.")
+        
+        def close_window():
+            return False
+        
+        # Tkinter
+        window = tk.Tk()
+        window.title("DataFrame Line Diagram")
+        label = tk.Label(window, text="Search Term:")
+        label.pack()
+        entry = tk.Entry(window)
+        entry.pack()
+        search_button = tk.Button(window, text="Search", command=perform_search)
+        search_button.pack()
+        close_button = tk.Button(window, text="Close", command=close_window)
+        close_button.pack()
+        window.mainloop()
 
+class Stops:
+    def __init__(self, data):
+        self.data = data
+    
+    def unique_stops(self):
+        data = []
+        df_haltestellen = pd.read_csv("Haltestelle.csv")
+        stops = self.data['halt_diva_von'].unique() # Liste aller Haltestellen
+        for stop in stops:
+            matching_row = df_haltestellen.loc[df_haltestellen['halt_diva'] == stop] #filtern wo stimmen zahlen überein
+            if not matching_row.empty:
+                stop = matching_row['halt_lang'].values[0]  #values damit es name anzeigt und nicht spalte aus matching row
+                data.append({'stop': stop})
+        return pd.DataFrame(data)
+
+class Stop_calculation:
+    def __init__(self, data, value):
+        self.data = data
+        self.value = value
+
+    def find_columns_with_same_value(self):
+        stop_df = self.data[self.data['stop'] == self.value].copy()
+        return pd.DataFrame(stop_df[['effective_ist', 'delay']])
 
 class Downloader: # Downloader vgl. P04
-    #neu ein Array mitgeben mit Urls die dann downloaed werden in einer Schleife 
+    #neu ein Array mitgeben mit Urls die dann downloaed werden in einer Schleife
     def __init__(self, url):
         self.url = url 
         self.file_name = os.path.basename(url)
@@ -298,7 +384,7 @@ if __name__ == '__main__':
     start_date_obj = Timespan(start_date)
     if end_date is not None:
         end_date_obj = Timespan(end_date)
-    else: 
+    else:
         end_date_obj = None   
     start_sunday, start_saturday = start_date_obj.calculate_time()
     if end_date_obj is not None:
@@ -316,12 +402,12 @@ if __name__ == '__main__':
             data_path = Data(file_path)
             dataframe = data_path.data()
             calculator = Calculator(dataframe)
-            df = calculator.calculate()
+            df1, top_stops1, data_delay1 = calculator.calculate()
         elif f'Fahrzeiten_SOLL_IST_{end_sunday}_{end_saturday}.csv' in file_path:
             data_path = Data(file_path)
             dataframe = data_path.data()
             calculator = Calculator(dataframe)
-            df = calculator.calculate()
+            df2, top_stops2, data_delay2 = calculator.calculate()
     
     # Data vizualisation
     root = tk.Tk()
