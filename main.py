@@ -1,4 +1,3 @@
-
 #################################################################################
 #   Autoren: Sarah, Kristina, Fadri
 #   Erstellungsdatum: 27.04.2023
@@ -24,7 +23,7 @@
 # Visualisierung schöner
 
 # Sarah
-#vergleichen von den zwei Datensätzen einbauen -> Done, Super Sarah!!
+#vergleichen von den zwei Datensätzen einbauen -> Done
 
 # Kristina
 # code verstehen

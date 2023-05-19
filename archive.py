@@ -63,4 +63,11 @@ if __name__ == '__main__':
     #dataframe = data_path.data()
     #calculator = Calculator(dataframe)
     #df = calculator.calculate()
+    
+    
+    for stop in stops:
+        stop_data = self.data[self.data['halt_diva_von'] == stop] # Daten für diese Haltestelle filtern
+        delay = (stop_data['effective_soll'] - stop_data['effective_ist']).mean().total_seconds() #// 60 # Delay in Sekunden (mit // 60 in Minuten) mit berechnung von datetime-Objekten
+        delay_stop[stop] = delay # speichern der berechneten verspätung
 """
+        #sorted_delays = sorted(data_delay.items(), key=lambda x: x[1], reverse=True) # sortieren der Haltestellen nach Verspätung (absteigend)
