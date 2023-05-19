@@ -14,13 +14,13 @@
 
 # -------Aufgaben
 # Fadri
-# Downloader ergänzen mit mehreren Urls zum übergeben -> Done
-# Daten auswählen von bestimmten Datum -> Done
 # Calculation neuer algorithmus da mehr Berechnungen -> Done einige Berechnungen müssen noch angepasst werden
 # Error handling:   - URL exisitiert nicht
 #                   - Datenverarbeitung Fehler
 #                   --> möglicherweise konzept erarbeiten
 # Visualisierung schöner
+# Auslagerung von unterem teil das nur Tkinter Fenster erstellt wird und Daten abgefragt werden
+
 
 # Sarah
 #vergleichen von den zwei Datensätzen einbauen -> Done
@@ -77,6 +77,7 @@ class Calculator:
         results = []
         top_stops = []
         data_delay = self.data
+        
         
         df_haltestellen = pd.read_csv("Haltestelle.csv")
         mapping_dict = df_haltestellen.set_index('halt_diva')['halt_lang'].to_dict()
@@ -378,6 +379,7 @@ if __name__ == '__main__':
     #end_date = input("Geben Sie die zweite Woche vom Datensatz an (leer lassen um keinen Vergleich zu generieren): ")
     start_date = "20.03.2023"
     end_date = "10.01.2023"
+    # Fragen wegen auslagerung in class
     start_date_obj = Timespan(start_date)
     if end_date is not None:
         end_date_obj = Timespan(end_date)
