@@ -72,11 +72,18 @@ class Calculator:
         self.data = data # Einlesen Daten
         
     def calculate(self):
-        #stops = self.data['halt_diva_von'] # Liste aller Haltestellen
-        #delay_stop = {}
+        stops = self.data['halt_diva_von'] # Liste aller Haltestellen
+        delay_stop = {}
         results = []
         top_stops = []
         data_delay = self.data
+        
+        """
+        for stop in stops:
+            stop_data = self.data[self.data['halt_diva_von'] == stop] # Daten für diese Haltestelle filtern
+            delay = (stop_data['effective_soll'] - stop_data['effective_ist']).mean().total_seconds() #// 60 # Delay in Sekunden (mit // 60 in Minuten) mit berechnung von datetime-Objekten
+            delay_stop[stop] = delay # speichern der berechneten verspätung
+        """
         
         
         df_haltestellen = pd.read_csv("Haltestelle.csv")
@@ -94,19 +101,12 @@ class Calculator:
         top_unreliable_stops_sorted = data_delay.nlargest(10, 'delay')# Top ten für ausgabe
         top_unreliable_stops = top_unreliable_stops_sorted[['stop', 'delay']].copy()
 
-        """
-        for stop in stops:
-            stop_data = self.data[self.data['halt_diva_von'] == stop] # Daten für diese Haltestelle filtern
-            delay = (stop_data['effective_soll'] - stop_data['effective_ist']).mean().total_seconds() #// 60 # Delay in Sekunden (mit // 60 in Minuten) mit berechnung von datetime-Objekten
-            delay_stop[stop] = delay # speichern der berechneten verspätung
-        """
         return pd.DataFrame(results), pd.DataFrame(top_unreliable_stops), pd.DataFrame(data_delay)
                
         
 class Visualization(tk.Frame):
     def __init__(self, dataframe1, dataframe2, title1, title2):
         super().__init__()
-        #self.root = tk.Tk()
         self.dataframe1 = dataframe1
         self.dataframe2 = dataframe2
         self.title1 = title1
@@ -114,55 +114,69 @@ class Visualization(tk.Frame):
         self.create_widgets()
         self.create_button_close()
         self.master.geometry("800x600")
-        #self.root.mainloop()
-      
+
     def create_widgets(self):
-        # Dataframe 1
         frame = tk.Frame(self)
         frame.pack(side="left", fill="both", expand=True)
+
+        # Dataframe 1
         frame1 = tk.Frame(frame)
         frame1.pack(side="left", fill="both", expand=True)
-        
+
         title_label1 = tk.Label(frame1, text=self.title1)
         title_label1.pack(side="top", fill="x", pady=10)
-        
+
         treeview1 = tk.ttk.Treeview(frame1, columns=list(self.dataframe1.columns), show='headings')
         for col in list(self.dataframe1.columns):
             treeview1.heading(col, text=col)
         for index, row in self.dataframe1.iterrows():
             treeview1.insert("", tk.END, values=list(row))
         treeview1.pack(side="left", fill="both", expand=True)
-        
+
         # Dataframe 2
         frame2 = tk.Frame(frame)
         frame2.pack(side="left", fill="both", expand=True)
-        
+
         title_label2 = tk.Label(frame2, text=self.title2)
         title_label2.pack(side="top", fill="x", pady=10)
-        
+
         treeview2 = tk.ttk.Treeview(frame2, columns=list(self.dataframe2.columns), show='headings')
         for col in list(self.dataframe2.columns):
             treeview2.heading(col, text=col)
-        for index, row in self.dataframe1.iterrows():  # Iterate over dataframe1 rows
-            treeview2.insert("", tk.END, values=list(row))  # Use dataframe1 row values
+        for index, row in self.dataframe2.iterrows():
+            treeview2.insert("", tk.END, values=list(row))
         treeview2.pack(side="left", fill="both", expand=True)
+
         scrollbar = tk.Scrollbar(frame, orient="vertical", command=self.on_scroll)
         scrollbar.pack(side="right", fill="y")
 
-        # treeview beide .... zusammen?
+        # Configure both treeviews to use the scrollbar
         treeview1.configure(yscrollcommand=scrollbar.set)
         treeview2.configure(yscrollcommand=scrollbar.set)
-        
+
+        # Synchronize scrolling for both treeviews
+        treeview1.configure(yscrollcommand=lambda *args: self.scroll_both(*args))
+        treeview2.configure(yscrollcommand=lambda *args: self.scroll_both(*args))
+
+    def scroll_both(self, *args):
+        for frame in self.winfo_children()[0].winfo_children():
+            if isinstance(frame, tk.Frame):
+                treeview = frame.winfo_children()[0]
+                if isinstance(treeview, ttk.Treeview):
+                    treeview.yview(*args)
+
+
     def on_scroll(self, *args):
         for treeview in self.winfo_children()[0].winfo_children():
             treeview.yview(*args)
-        
+
     def create_button_close(self):
         title_button = tk.Button(self, text="Schliessen", command=self.close)
         title_button.pack(side="right", pady=10)
-    
+
     def close(self):
         self.master.destroy()
+
 
 class App:
     def __init__(self, root):
@@ -245,7 +259,7 @@ class App:
     def b_dataframe_command(self):
         title1 =f'{start_sunday} - {start_saturday}'
         title2 =f'{end_sunday} - {end_saturday}'
-        df_visualizer = Visualization(dataframe1=df1, dataframe2=df2, title1 = title1, title2= title2)
+        df_visualizer = Visualization(df1, df2, title1 = title1, title2= title2)
         df_visualizer.pack(fill="both", expand=True)
 
 class Barvisualizer:
