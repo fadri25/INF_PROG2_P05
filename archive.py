@@ -71,3 +71,30 @@ if __name__ == '__main__':
         delay_stop[stop] = delay # speichern der berechneten verspätung
 """
         #sorted_delays = sorted(data_delay.items(), key=lambda x: x[1], reverse=True) # sortieren der Haltestellen nach Verspätung (absteigend)
+
+"""
+        for stop in stops:
+            stop_data = self.data[self.data['halt_diva_von'] == stop] # Daten für diese Haltestelle filtern
+            delay = (stop_data['effective_soll'] - stop_data['effective_ist']).mean().total_seconds() #// 60 # Delay in Sekunden (mit // 60 in Minuten) mit berechnung von datetime-Objekten
+            delay_stop[stop] = delay # speichern der berechneten verspätung
+
+        sorted_delays = sorted(delay_stop.items(), key=lambda x: x[1], reverse=True) # sortieren der Haltestellen nach Verspätung (absteigend)
+        unreliable_stops = sorted_delays 
+        df_haltestellen = pd.read_csv("Haltestelle.csv")
+
+        for stop, delay in unreliable_stops:
+            matching_row = df_haltestellen.loc[df_haltestellen['halt_diva'] == stop] #filtern wo stimmen zahlen überein
+            if not matching_row.empty:
+                stop = matching_row['halt_lang'].values[0]  #values damit es name anzeigt und nicht spalte aus matching row
+                results.append({'stop': stop, 'delay': delay})
+
+        top_unreliable_stops = sorted_delays[:10] # Top ten für ausgabe
+        for stop, delay in top_unreliable_stops:
+            matching_row = df_haltestellen.loc[df_haltestellen['halt_diva'] == stop] #filtern wo stimmen zahlen überein
+            if not matching_row.empty:
+                stop = matching_row['halt_lang'].values[0]  #values damit es name anzeigt und nicht spalte aus matching row
+                print(f'{stop}: average delay of {delay:.2f} seconds.')
+
+        return pd.DataFrame(results)               
+        """
+        #return pd.DataFrame(results), pd.DataFrame(top_unreliable_stops), pd.DataFrame(data_delay)
