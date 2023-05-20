@@ -111,7 +111,7 @@ class Calculator:
 class Visualization(tk.Frame):
     def __init__(self, dataframe1, dataframe2, title1, title2):
         self.window = Tk()
-        self.window.title("Verspätungen Vergleich")
+        self.window.title("Comparison delays")
         self.dataframe1 = dataframe1
         self.dataframe2 = dataframe2
         self.title1 = title1
@@ -177,7 +177,7 @@ class Visualization(tk.Frame):
             treeview.yview(*args)
 
     def create_button_close(self):
-        title_button = tk.Button(self.window, text="Schließen", command=self.close)
+        title_button = tk.Button(self.window, text="Close", command=self.close)
         title_button.pack(side="bottom", pady=10)
 
     def close(self):
@@ -186,7 +186,7 @@ class Visualization(tk.Frame):
 
 class App:
     def __init__(self, root):
-        root.title("VBZ Verspätungen")
+        root.title("VBZ Delays")
         width=504
         height=195
         screenwidth = root.winfo_screenwidth()
@@ -208,7 +208,7 @@ class App:
         b_delay["font"] = ft
         b_delay["fg"] = "#000000"
         b_delay["justify"] = "center"
-        b_delay["text"] = "Verspätungen"
+        b_delay["text"] = "Delays"
         b_delay.place(x=140,y=150,width=103,height=30)
         b_delay["command"] = self.b_delay_command
 
@@ -218,7 +218,7 @@ class App:
         b_bar["font"] = ft
         b_bar["fg"] = "#000000"
         b_bar["justify"] = "center"
-        b_bar["text"] = "Balkendiagramm"
+        b_bar["text"] = "Barplot"
         b_bar.place(x=260,y=150,width=104,height=30)
         b_bar["command"] = self.b_bar_command
 
@@ -228,7 +228,7 @@ class App:
         b_close["font"] = ft
         b_close["fg"] = "#000000"
         b_close["justify"] = "center"
-        b_close["text"] = "Schliessen"
+        b_close["text"] = "Close"
         b_close.place(x=380,y=150,width=103,height=30)
         b_close["command"] = self.b_close_command
         
@@ -238,7 +238,7 @@ class App:
         b_dataframe["font"] = ft
         b_dataframe["fg"] = "#000000"
         b_dataframe["justify"] = "center"
-        b_dataframe["text"] = "Datensätze"
+        b_dataframe["text"] = "Data"
         b_dataframe.place(x=20,y=150,width=104,height=30)
         b_dataframe["command"] = self.b_dataframe_command
         
@@ -247,7 +247,7 @@ class App:
         l_delay["font"] = ft
         l_delay["fg"] = "#333333"
         l_delay["justify"] = "center"
-        l_delay["text"] = "VBZ Verspätungen"
+        l_delay["text"] = "VBZ Delays"
         l_delay.place(x=100,y=20,width=321,height=30)
 
     def b_delay_command(self):
@@ -276,9 +276,9 @@ class Barvisualizer:
         x_values = self.df['stop']
         y_values = self.df['delay']
         plt.bar(x_values, y_values)
-        plt.xlabel('Haltestellen')
-        plt.ylabel('Verspätung')
-        plt.title('Top 10 Haltestellen')
+        plt.xlabel('Stations in Zurich')
+        plt.ylabel('Delay in minutes')
+        plt.title('Top 10 Delays of Stations')
         plt.xticks(rotation=45) # Rotation um 45 der X-Achsenbeschriftung um lesen zu können
         plt.tight_layout() # Anpassen um überlappungen vorzubeugen
         plt.gca().xaxis.set_tick_params(pad=0) # Schrift ein wenig weiter nach links um es besser lesen zu können aber hä
@@ -291,13 +291,13 @@ class DataFrameLineDiagram:
         self.search_results = []
         self.window = Tk()
         self.window.title("")
-        self.label = Label(self.window, text="Haltestelle:")
+        self.label = Label(self.window, text="Station:")
         self.label.pack()
         self.entry = Entry(self.window)
         self.entry.pack()
-        self.search_button = Button(self.window, text="Suchen", command=self.perform_search)
+        self.search_button = Button(self.window, text="Search", command=self.perform_search)
         self.search_button.pack()
-        self.close_button = Button(self.window, text="Schliessen", command=self.close_window)
+        self.close_button = Button(self.window, text="Close", command=self.close_window)
         self.close_button.pack()
 
     def perform_search(self):
@@ -311,12 +311,12 @@ class DataFrameLineDiagram:
             lineplot = calc.find_columns_with_same_value()
             lineplot_sorted = lineplot.sort_values('effective_ist', ascending=False)
             plt.plot(lineplot_sorted['effective_ist'], lineplot_sorted['delay'])
-            plt.xlabel('Zeit')
-            plt.ylabel('Verspätung')
-            plt.title(f'Verspätungen für {match}')
+            plt.xlabel('Time')
+            plt.ylabel('Delay')
+            plt.title(f'Delays for {match}')
             plt.show()
         else:
-            messagebox.showinfo("Suchresultat", "Keine Haltestelle gefunden.")
+            messagebox.showinfo("search result", "No station found.")
 
     def close_window(self):
         self.window.destroy()
