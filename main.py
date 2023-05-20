@@ -20,7 +20,10 @@
 #                   --> möglicherweise konzept erarbeiten
 # Visualisierung schöner
 # Auslagerung von unterem teil das nur Tkinter Fenster erstellt wird und Daten abgefragt werden
-
+# Zeit liniendiagramm verspätung pro tag
+# Balkendiagramm Zahlen oben darstellen + Sekunden angeben
+# Balkendiagramm 10 Haltestellen + Sortieren
+# Threading für Berechnungen --> schneller
 
 # Sarah
 #vergleichen von den zwei Datensätzen einbauen -> Done
@@ -42,7 +45,7 @@ import urllib.request as ur
 import matplotlib.pyplot as plt
 from difflib import get_close_matches
 import pandas as pd
-import threading
+#import threading
 
 class TimestampConverter:
     def __init__(self, df):
@@ -89,12 +92,13 @@ class Calculator:
         df_haltestellen = pd.read_csv("Haltestelle.csv")
         mapping_dict = df_haltestellen.set_index('halt_diva')['halt_lang'].to_dict()
         data_delay['stop'] = data_delay['halt_diva_von'].map(mapping_dict)
-        data_delay['delay'] = (data_delay['effective_soll'] - data_delay['effective_ist'])
+        data_delay['delay'] = (data_delay['effective_ist'] - data_delay['effective_soll'])
         data_delay['delay'] = data_delay['delay'].dt.total_seconds()
         data_delay = data_delay.sort_values('delay', ascending=False)
         #sorted_delays = sorted(data_delay.items(), key=lambda x: x[1], reverse=True) # sortieren der Haltestellen nach Verspätung (absteigend)
         
-        result = data_delay.groupby('stop')['delay'].mean() # Timedelta falls fehler
+        result = data_delay.groupby('stop')['delay'].mean() # Timedelta falls fehler 
+        print(result)
         for stop, mean in result.items():
             results.append({'stop': stop, 'delay': mean})
         
@@ -106,22 +110,24 @@ class Calculator:
         
 class Visualization(tk.Frame):
     def __init__(self, dataframe1, dataframe2, title1, title2):
-        super().__init__()
+        self.window = Tk()
+        self.window.title("Verspätungen Vergleich")
         self.dataframe1 = dataframe1
         self.dataframe2 = dataframe2
         self.title1 = title1
         self.title2 = title2
         self.create_widgets()
         self.create_button_close()
-        self.master.geometry("800x600")
+        self.window.geometry("800x600")
+        self.window.mainloop()
 
     def create_widgets(self):
-        frame = tk.Frame(self)
+        frame = tk.ttk.Frame(self.window)
         frame.pack(side="left", fill="both", expand=True)
 
         # Dataframe 1
         frame1 = tk.Frame(frame)
-        frame1.pack(side="left", fill="both", expand=True)
+        frame1.pack(side="right", fill="both", expand=True)
 
         title_label1 = tk.Label(frame1, text=self.title1)
         title_label1.pack(side="top", fill="x", pady=10)
@@ -131,11 +137,11 @@ class Visualization(tk.Frame):
             treeview1.heading(col, text=col)
         for index, row in self.dataframe1.iterrows():
             treeview1.insert("", tk.END, values=list(row))
-        treeview1.pack(side="left", fill="both", expand=True)
+        treeview1.pack(side="left", fill="both", expand=False)
 
         # Dataframe 2
         frame2 = tk.Frame(frame)
-        frame2.pack(side="left", fill="both", expand=True)
+        frame2.pack(side="left", fill="both", expand=False)
 
         title_label2 = tk.Label(frame2, text=self.title2)
         title_label2.pack(side="top", fill="x", pady=10)
@@ -159,7 +165,7 @@ class Visualization(tk.Frame):
         treeview2.configure(yscrollcommand=lambda *args: self.scroll_both(*args))
 
     def scroll_both(self, *args):
-        for frame in self.winfo_children()[0].winfo_children():
+        for frame in self.window.winfo_children()[0].winfo_children():
             if isinstance(frame, tk.Frame):
                 treeview = frame.winfo_children()[0]
                 if isinstance(treeview, ttk.Treeview):
@@ -167,15 +173,15 @@ class Visualization(tk.Frame):
 
 
     def on_scroll(self, *args):
-        for treeview in self.winfo_children()[0].winfo_children():
+        for treeview in self.window.winfo_children()[0].winfo_children():
             treeview.yview(*args)
 
     def create_button_close(self):
-        title_button = tk.Button(self, text="Schliessen", command=self.close)
-        title_button.pack(side="right", pady=10)
+        title_button = tk.Button(self.window, text="Schließen", command=self.close)
+        title_button.pack(side="bottom", pady=10)
 
     def close(self):
-        self.master.destroy()
+        self.window.destroy()
 
 
 class App:
