@@ -18,7 +18,6 @@
 # Error handling:   - URL exisitiert nicht
 #                   - Datenverarbeitung Fehler
 #                   --> möglicherweise konzept erarbeiten
-# Visualisierung schöner
 # Auslagerung von unterem teil das nur Tkinter Fenster erstellt wird und Daten abgefragt werden
 # Zeit liniendiagramm verspätung pro tag
 # Balkendiagramm Zahlen oben darstellen + Sekunden angeben
@@ -81,14 +80,6 @@ class Calculator:
         top_stops = []
         data_delay = self.data
         
-        """
-        for stop in stops:
-            stop_data = self.data[self.data['halt_diva_von'] == stop] # Daten für diese Haltestelle filtern
-            delay = (stop_data['effective_soll'] - stop_data['effective_ist']).mean().total_seconds() #// 60 # Delay in Sekunden (mit // 60 in Minuten) mit berechnung von datetime-Objekten
-            delay_stop[stop] = delay # speichern der berechneten verspätung
-        """
-        
-        
         df_haltestellen = pd.read_csv("Haltestelle.csv")
         mapping_dict = df_haltestellen.set_index('halt_diva')['halt_lang'].to_dict()
         data_delay['stop'] = data_delay['halt_diva_von'].map(mapping_dict)
@@ -105,8 +96,7 @@ class Calculator:
         top_unreliable_stops_sorted = data_delay.nlargest(10, 'delay')# Top ten für ausgabe
         top_unreliable_stops = top_unreliable_stops_sorted[['stop', 'delay']].copy()
 
-        return pd.DataFrame(results), pd.DataFrame(top_unreliable_stops), pd.DataFrame(data_delay)
-               
+        return pd.DataFrame(results), pd.DataFrame(top_unreliable_stops), pd.DataFrame(data_delay)             
         
 class Visualization(tk.Frame):
     def __init__(self, dataframe1, dataframe2, title1, title2):
@@ -171,7 +161,6 @@ class Visualization(tk.Frame):
                 if isinstance(treeview, ttk.Treeview):
                     treeview.yview(*args)
 
-
     def on_scroll(self, *args):
         for treeview in self.window.winfo_children()[0].winfo_children():
             treeview.yview(*args)
@@ -182,7 +171,6 @@ class Visualization(tk.Frame):
 
     def close(self):
         self.window.destroy()
-
 
 class App:
     def __init__(self, root):
