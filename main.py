@@ -14,15 +14,12 @@
 
 # -------Aufgaben
 # Fadri
-# Calculation neuer algorithmus da mehr Berechnungen -> Done einige Berechnungen müssen noch angepasst werden
 # Error handling:   - URL exisitiert nicht
 #                   - Datenverarbeitung Fehler
 #                   --> möglicherweise konzept erarbeiten
 # Auslagerung von unterem teil das nur Tkinter Fenster erstellt wird und Daten abgefragt werden
-# Zeit liniendiagramm verspätung pro tag
-# Balkendiagramm Zahlen oben darstellen + Sekunden angeben
-# Balkendiagramm 10 Haltestellen + Sortieren
 # Threading für Berechnungen --> schneller
+# Sort in Visualization
 
 # Sarah
 #vergleichen von den zwei Datensätzen einbauen -> Done
@@ -231,7 +228,7 @@ class App:
 
     def b_delay_command(self):
         stops = Stops(dataframe).unique_stops()
-        line_diagram = DataFrameLineDiagram(stops, data_delay1)
+        line_diagram = Weeklymeandelay(stops, data_delay1)
         line_diagram.search('stop')
 
     def b_bar_command(self):
@@ -260,14 +257,14 @@ class Barvisualizer:
         for i,v in enumerate(y_values):
             plt.text(i,v, str(v), ha='center', va='bottom')
         plt.xlabel('Stations in Zurich')
-        plt.ylabel('Delay in minutes')
+        plt.ylabel('Delay in seconds')
         plt.title(self.title)
-        plt.xticks(rotation=45) # Rotation um 45 der X-Achsenbeschriftung um lesen zu können
+        plt.xticks(rotation=45, ha='right') # Rotation um 45 der X-Achsenbeschriftung um lesen zu können
         plt.tight_layout() # Anpassen um überlappungen vorzubeugen
         plt.gca().xaxis.set_tick_params(pad=0) # Schrift ein wenig weiter nach links um es besser lesen zu können aber hä
         plt.show()
 
-class DataFrameLineDiagram:
+class Weeklymeandelay:
     def __init__(self, dataframe, df1):
         self.dataframe = dataframe
         self.df = df1
@@ -290,13 +287,20 @@ class DataFrameLineDiagram:
         if matches:
             match = matches[0]
             calc = Stop_calculation(self.df, match)
-            lineplot = calc.find_columns_with_same_value()
-            lineplot_sorted = lineplot.sort_values('effective_ist', ascending=False)
-            plt.plot(lineplot_sorted['effective_ist'], lineplot_sorted['delay'])
-            plt.xlabel('Time')
-            plt.ylabel('Delay')
-            plt.title(f'Delays for {match}')
+            barplot = calc.find_columns_with_same_value()
+            x_values = barplot['betriebsdatum']
+            y_values = barplot['delay'].round(1)
+            plt.bar(x_values, y_values)
+            for i,v in enumerate(y_values):
+                plt.text(i,v, str(v), ha='center', va='bottom')
+            plt.xlabel('Date')
+            plt.ylabel('Mean delay in seconds')
+            plt.title(f'Mean delays for {match}')
+            plt.xticks(rotation=45, ha='right') # Rotation um 45 der X-Achsenbeschriftung um lesen zu können
+            plt.tight_layout() # Anpassen um überlappungen vorzubeugen
+            plt.gca().xaxis.set_tick_params(pad=0) # Schrift ein wenig weiter nach links um es besser lesen zu können aber hä
             plt.show()
+
         else:
             messagebox.showinfo("search result", "No station found.")
 
@@ -321,14 +325,26 @@ class Stops:
                 data.append({'stop': stop})
         return pd.DataFrame(data)
 
+class Meancalculator:
+    def __init__(self, dataframe, match):
+        self.dataframe = dataframe
+        self.match = match
+    
+    def calculate_mean(self):
+        filter = self.dataframe[self.dataframe['stop'] == self.match]
+        grouped = filter.groupby(['stop', 'betriebsdatum'])
+        mean_values = grouped['delay'].mean().reset_index()
+        return mean_values
+
 class Stop_calculation:
     def __init__(self, data, value):
         self.data = data
         self.value = value
 
     def find_columns_with_same_value(self):
-        stop_df = self.data[self.data['stop'] == self.value].copy()
-        return pd.DataFrame(stop_df[['effective_ist', 'delay']])
+        data = Meancalculator(self.data, self.value)
+        data_mean = data.calculate_mean()
+        return pd.DataFrame(data_mean)
 
 class Downloader: # Downloader vgl. P04
     def __init__(self, url):
@@ -336,7 +352,7 @@ class Downloader: # Downloader vgl. P04
         self.file_name = os.path.basename(url) #definiert den Namen des Dokuments so wie die url basis     
     
     def download(self, timeout = 6000000):
-        try: 
+        try:
             if not os.path.isfile(self.file_name) or time.time() - os.stat(self.file_name).st_mtime > timeout:
                 print(f"\nLoading data from url {self.url}. \n This may take a while if files are large.")
                 ur.urlretrieve(self.url, self.file_name)             
@@ -376,7 +392,7 @@ if __name__ == '__main__':
     #end_date = input("Geben Sie die zweite Woche vom Datensatz an (leer lassen um keinen Vergleich zu generieren): ")
     start_date = "20.03.2023"
     end_date = "10.01.2023"
-    # Fragen wegen auslagerung in class
+    # Fragen wegen auslagerung in class --> auslagerung
     start_date_obj = Timespan(start_date)
     if end_date is not None:
         end_date_obj = Timespan(end_date)
