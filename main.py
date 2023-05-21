@@ -260,7 +260,7 @@ class Barvisualizer:
         for i,v in enumerate(y_values):
             plt.text(i,v, str(v), ha='center', va='bottom')
         plt.xlabel('Stations in Zurich')
-        plt.ylabel('Delay in minutes')
+        plt.ylabel('Delay in seconds')
         plt.title(self.title)
         plt.xticks(rotation=45) # Rotation um 45 der X-Achsenbeschriftung um lesen zu können
         plt.tight_layout() # Anpassen um überlappungen vorzubeugen
