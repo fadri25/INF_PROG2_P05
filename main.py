@@ -74,29 +74,20 @@ class Calculator:
         self.data = data # Einlesen Daten
         
     def calculate(self):
-        stops = self.data['halt_diva_von'] # Liste aller Haltestellen
-        delay_stop = {}
         results = []
-        top_stops = []
         data_delay = self.data
-        
         df_haltestellen = pd.read_csv("Haltestelle.csv")
         mapping_dict = df_haltestellen.set_index('halt_diva')['halt_lang'].to_dict()
         data_delay['stop'] = data_delay['halt_diva_von'].map(mapping_dict)
         data_delay['delay'] = (data_delay['effective_ist'] - data_delay['effective_soll'])
-        data_delay['delay'] = data_delay['delay'].dt.total_seconds()
+        data_delay['delay'] = data_delay['delay'].dt.total_seconds().round(1)
         data_delay = data_delay.sort_values('delay', ascending=False)
-        #sorted_delays = sorted(data_delay.items(), key=lambda x: x[1], reverse=True) # sortieren der Haltestellen nach Verspätung (absteigend)
-        
-        result = data_delay.groupby('stop')['delay'].mean() # Timedelta falls fehler 
-        print(result)
+        result = data_delay.groupby('stop')['delay'].mean().round(1) # Timedelta falls fehler 
         for stop, mean in result.items():
             results.append({'stop': stop, 'delay': mean})
-        
-        top_unreliable_stops_sorted = data_delay.nlargest(10, 'delay')# Top ten für ausgabe
-        top_unreliable_stops = top_unreliable_stops_sorted[['stop', 'delay']].copy()
-
-        return pd.DataFrame(results), pd.DataFrame(top_unreliable_stops), pd.DataFrame(data_delay)             
+        top_means = result.nlargest(10, keep='all')
+        topppp = pd.DataFrame({'stop': top_means.index, 'delay': top_means.values.round(1)})
+        return pd.DataFrame(results), pd.DataFrame(topppp), pd.DataFrame(data_delay)             
         
 class Visualization(tk.Frame):
     def __init__(self, dataframe1, dataframe2, title1, title2):
@@ -244,7 +235,8 @@ class App:
         line_diagram.search('stop')
 
     def b_bar_command(self):
-        visualizer = Barvisualizer(top_stops1)
+        title1 =f'Top 10 Delays of Stations({start_sunday}-{start_saturday})'
+        visualizer = Barvisualizer(top_stops1, title1)
         visualizer.plot_bar()
 
     def b_close_command(self):
@@ -257,16 +249,19 @@ class App:
         df_visualizer.pack(fill="both", expand=True)
 
 class Barvisualizer:
-    def __init__(self, top_stops):
+    def __init__(self, top_stops, title):
         self.df = top_stops
+        self.title = title
     
     def plot_bar(self):
         x_values = self.df['stop']
         y_values = self.df['delay']
         plt.bar(x_values, y_values)
+        for i,v in enumerate(y_values):
+            plt.text(i,v, str(v), ha='center', va='bottom')
         plt.xlabel('Stations in Zurich')
         plt.ylabel('Delay in minutes')
-        plt.title('Top 10 Delays of Stations')
+        plt.title(self.title)
         plt.xticks(rotation=45) # Rotation um 45 der X-Achsenbeschriftung um lesen zu können
         plt.tight_layout() # Anpassen um überlappungen vorzubeugen
         plt.gca().xaxis.set_tick_params(pad=0) # Schrift ein wenig weiter nach links um es besser lesen zu können aber hä
@@ -291,7 +286,6 @@ class DataFrameLineDiagram:
     def perform_search(self):
         search_term = self.entry.get()
 
-        # closest match -> lib?
         matches = get_close_matches(search_term, self.dataframe['stop'])
         if matches:
             match = matches[0]
@@ -337,22 +331,16 @@ class Stop_calculation:
         return pd.DataFrame(stop_df[['effective_ist', 'delay']])
 
 class Downloader: # Downloader vgl. P04
-    #neu ein Array mitgeben mit Urls die dann downloaed werden in einer Schleife
     def __init__(self, url):
         self.url = url 
-        self.file_name = os.path.basename(url) #definiert den Namen des Dokuments so wie die url basis
-        
+        self.file_name = os.path.basename(url) #definiert den Namen des Dokuments so wie die url basis     
     
     def download(self, timeout = 6000000):
-        #wenn es nicht im cache ist oder mehr als 60000 Sekunden (10 Stunden) her ist-> daten neu holen
-        
         try: 
             if not os.path.isfile(self.file_name) or time.time() - os.stat(self.file_name).st_mtime > timeout:
                 print(f"\nLoading data from url {self.url}. \n This may take a while if files are large.")
-                ur.urlretrieve(self.url, self.file_name)                
+                ur.urlretrieve(self.url, self.file_name)             
             else:
-                #datei wird aus cache geladen, read only
-                #f = open(self.file_name, 'r')
                 print(f"Taking file {self.file_name} from cache.")                    
 
         except Exception as e:
