@@ -98,3 +98,5 @@ if __name__ == '__main__':
         return pd.DataFrame(results)               
         """
         #return pd.DataFrame(results), pd.DataFrame(top_unreliable_stops), pd.DataFrame(data_delay)
+        #datei wird aus cache geladen, read only
+        #f = open(self.file_name, 'r')
