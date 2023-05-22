@@ -8,8 +8,6 @@
 
 #(B) Report on the top 10 of most unreliable stops. Where should you never wait for your
 #transportation?
-# Sollabfahrt von (technisch: soll_ab_von)
-# Istabfahrt von (technisch: ist_ab_von)
 # Namen geben --> RailFlow
 
 # -------Aufgaben
@@ -27,10 +25,10 @@
 # Kristina
 # code verstehen
 
-import os.path
+import time
 from datetime import datetime, timedelta, date
 import os
-import time
+import os.path
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
@@ -86,83 +84,48 @@ class Calculator:
         sorted_delay = pd.DataFrame(result)
         sorted_df = sorted_delay.sort_values(by=['delay'], ascending=True)
         return pd.DataFrame(results), pd.DataFrame(topppp), pd.DataFrame(data_delay), sorted_df    
-        
-class Visualization(tk.Frame):
-    def __init__(self, df1_sorted, dataframe2, title1, title2):
-        self.window = Tk()
-        self.window.title("Comparison delays")
-        self.dataframe1 = dataframe2
-        self.dataframe2 = df1_sorted
-        print(self.dataframe1)
-        print(self.dataframe2)
-        self.title1 = title1
-        self.title2 = title2
+    
+class Visualization:
+    def __init__(self, df1_sorted, df2):
+        self.root = tk.Tk()
+        self.df1 = df1_sorted
+        self.df2 = df2
         self.create_widgets()
-        self.create_button_close()
-        self.window.geometry("800x600")
-        self.window.mainloop()
-
+        self.root.title = "Mean Delays"
+        self.root.geometry("800x600")
+        self.close_button = ttk.Button(self.root, text='Close', command=self.close_window)
+        self.close_button.pack()
+        self.root.mainloop() 
+        
     def create_widgets(self):
-        frame = tk.Frame(self.window)
-        frame.pack(side="left", fill="both", expand=True)
-
-        # Dataframe 1
+        frame = tk.Frame(self.root)
+        frame.pack(side="left",fill='both', expand=True)
+        
+        # DF1
         frame1 = tk.Frame(frame)
         frame1.pack(side="left", fill="both", expand=True)
+        self.treeview = tk.ttk.Treeview(frame1)
+        self.treeview.pack(side='left', fill='both', expand=True)
+        self.scrollbar = ttk.Scrollbar(frame, orient='vertical', command=self.treeview.yview)
+        self.scrollbar.pack(side='right', fill='y')
+        self.treeview.configure(yscrollcommand=self.scrollbar.set)
+        self.combine_dataframes()
+             
+    def combine_dataframes(self):
+        combined_df = self.df1.merge(self.df2[['stop', 'delay']], on='stop', how='left')
+        combined_df.columns = ['stop', f'delay {start_saturday}-{start_sunday}', f'delay {end_saturday}-{end_sunday}']
 
-        title_label1 = tk.Label(frame1, text=self.title1)
-        title_label1.pack(side="top", fill="x", pady=10)
+        self.treeview['columns'] = combined_df.columns.tolist()
+        for col in combined_df.columns:
+            self.treeview.heading(col, text=col)
+            self.treeview.column(col, width=10)  # adjustment
 
-        treeview1 = tk.ttk.Treeview(frame1, columns=list(self.dataframe1.columns), show='headings')
-        for col in list(self.dataframe1.columns):
-            treeview1.heading(col, text=col)
-        for index, row in self.dataframe1.iterrows():
-            treeview1.insert("", tk.END, values=list(row))
-        treeview1.pack(side="left", fill="both", expand=True)
+        for _, row in combined_df.iterrows():
+            self.treeview.insert('', 'end', values=row.tolist())
 
-        # Dataframe 2
-        frame2 = tk.Frame(frame)
-        frame2.pack(side="left", fill="both", expand=True)
-
-        title_label2 = tk.Label(frame2, text=self.title2)
-        title_label2.pack(side="top", fill="x", pady=10)
-
-        treeview2 = tk.ttk.Treeview(frame2, columns=list(self.dataframe2.columns), show='headings')
-        for col in list(self.dataframe2.columns):
-            treeview2.heading(col, text=col)
-        for index, row in self.dataframe2.iterrows():
-            treeview2.insert("", tk.END, values=list(row))
-        treeview2.pack(side="left", fill="both", expand=True)
-
-        scrollbar = tk.Scrollbar(frame, orient="vertical", command=self.on_scroll)
-        scrollbar.pack(side="right", fill="y")
-
-        # Configure both treeviews to use the scrollbar
-        treeview1.configure(yscrollcommand=scrollbar.set)
-        treeview2.configure(yscrollcommand=scrollbar.set)
-
-        # Synchronize scrolling for both treeviews
-        treeview1.configure(yscrollcommand=lambda *args: self.scroll_both(*args))
-        treeview2.configure(yscrollcommand=lambda *args: self.scroll_both(*args))
-
-    def scroll_both(self, *args):
-        for frame in self.window.winfo_children()[0].winfo_children():
-            if isinstance(frame, tk.Frame):
-                treeview = frame.winfo_children()[0]
-                if isinstance(treeview, ttk.Treeview):
-                    treeview.yview(*args)
-
-    def on_scroll(self, *args):
-        for treeview in self.window.winfo_children()[0].winfo_children():
-            treeview.yview(*args)
-
-    def create_button_close(self):
-        title_button = tk.Button(self.window, text="Close", command=self.close)
-        title_button.pack(side="bottom", pady=10)
-
-    def close(self):
-        self.window.destroy()
-
+    def close_window(self):
+        self.root.destroy()   
+    
 class App:
     def __init__(self, root):
         root.title("VBZ Delays")
@@ -245,7 +208,7 @@ class App:
     def b_dataframe_command(self):
         title1 =f'{start_sunday} - {start_saturday}'
         title2 =f'{end_sunday} - {end_saturday}'
-        df_visualizer = Visualization(df1_sorted, df2, title1 = title1, title2= title2)
+        df_visualizer = Visualization(df1_sorted, df2) # , title1 = title1, title2= title2)
         df_visualizer.pack(fill="both", expand=True)
 
 class Barvisualizer:
