@@ -2,8 +2,8 @@
 #   Autoren: Sarah, Kristina, Fadri
 #   Erstellungsdatum: 27.04.2023
 #   Beschreibung: INF_PROG2_P05
-#   Version: 1.6 (GVC)
-#   Letze Änderung: 17.05.2023
+#   Version: 2.1 (GVC)
+#   Letze Änderung: 22.05.2023
 #################################################################################
 
 #(B) Report on the top 10 of most unreliable stops. Where should you never wait for your
@@ -41,13 +41,12 @@ import urllib.request as ur
 import matplotlib.pyplot as plt
 from difflib import get_close_matches
 import pandas as pd
-#import threading
 
 class TimestampConverter:
     def __init__(self, df):
         self.df = df # Dataframe einlesen in class
         self.midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) # Mitternacht im Zeitformat generieren
-        
+         
     def seconds_to_time(self, seconds):
         return self.midnight + timedelta(seconds=seconds) # Umrechnung Sekunden in Zeit
         
@@ -84,14 +83,18 @@ class Calculator:
             results.append({'stop': stop, 'delay': mean})
         top_means = result.nlargest(10, keep='all')
         topppp = pd.DataFrame({'stop': top_means.index, 'delay': top_means.values.round(1)})
-        return pd.DataFrame(results), pd.DataFrame(topppp), pd.DataFrame(data_delay)             
+        sorted_delay = pd.DataFrame(result)
+        sorted_df = sorted_delay.sort_values(by=['delay'], ascending=True)
+        return pd.DataFrame(results), pd.DataFrame(topppp), pd.DataFrame(data_delay), sorted_df    
         
 class Visualization(tk.Frame):
-    def __init__(self, dataframe1, dataframe2, title1, title2):
+    def __init__(self, df1_sorted, dataframe2, title1, title2):
         self.window = Tk()
         self.window.title("Comparison delays")
-        self.dataframe1 = dataframe1
-        self.dataframe2 = dataframe2
+        self.dataframe1 = dataframe2
+        self.dataframe2 = df1_sorted
+        print(self.dataframe1)
+        print(self.dataframe2)
         self.title1 = title1
         self.title2 = title2
         self.create_widgets()
@@ -100,12 +103,12 @@ class Visualization(tk.Frame):
         self.window.mainloop()
 
     def create_widgets(self):
-        frame = tk.ttk.Frame(self.window)
+        frame = tk.Frame(self.window)
         frame.pack(side="left", fill="both", expand=True)
 
         # Dataframe 1
         frame1 = tk.Frame(frame)
-        frame1.pack(side="right", fill="both", expand=True)
+        frame1.pack(side="left", fill="both", expand=True)
 
         title_label1 = tk.Label(frame1, text=self.title1)
         title_label1.pack(side="top", fill="x", pady=10)
@@ -115,11 +118,11 @@ class Visualization(tk.Frame):
             treeview1.heading(col, text=col)
         for index, row in self.dataframe1.iterrows():
             treeview1.insert("", tk.END, values=list(row))
-        treeview1.pack(side="left", fill="both", expand=False)
+        treeview1.pack(side="left", fill="both", expand=True)
 
         # Dataframe 2
         frame2 = tk.Frame(frame)
-        frame2.pack(side="left", fill="both", expand=False)
+        frame2.pack(side="left", fill="both", expand=True)
 
         title_label2 = tk.Label(frame2, text=self.title2)
         title_label2.pack(side="top", fill="x", pady=10)
@@ -242,7 +245,7 @@ class App:
     def b_dataframe_command(self):
         title1 =f'{start_sunday} - {start_saturday}'
         title2 =f'{end_sunday} - {end_saturday}'
-        df_visualizer = Visualization(df1, df2, title1 = title1, title2= title2)
+        df_visualizer = Visualization(df1_sorted, df2, title1 = title1, title2= title2)
         df_visualizer.pack(fill="both", expand=True)
 
 class Barvisualizer:
@@ -385,7 +388,7 @@ class Timespan:
             formated_sunday = sunday.strftime(f'%Y%m%d')
             formated_saturday = saturday.strftime(f'%Y%m%d')
             return formated_sunday, formated_saturday
-    
+
 if __name__ == '__main__':
     
     #start_date = input("Geben Sie die erste Woche vom vergleich an (leer lassen für aktuelles Datum dd.mm.yyyy): ") 
@@ -414,12 +417,12 @@ if __name__ == '__main__':
             data_path = Data(file_path)
             dataframe = data_path.data()
             calculator = Calculator(dataframe)
-            df1, top_stops1, data_delay1 = calculator.calculate()
+            df1, top_stops1, data_delay1, df1_sorted = calculator.calculate()
         elif f'Fahrzeiten_SOLL_IST_{end_sunday}_{end_saturday}.csv' in file_path:
             data_path = Data(file_path)
             dataframe = data_path.data()
             calculator = Calculator(dataframe)
-            df2, top_stops2, data_delay2 = calculator.calculate()
+            df2, top_stops2, data_delay2, df2_sorted = calculator.calculate()
     
     # Data vizualisation
     root = tk.Tk()
