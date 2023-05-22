@@ -1,2 +1,4 @@
 # INF_PROG2_P05
-P05 irgendwas Moibility
+The whole code is executed in the main.py file.
+If you click on the "Delays" Button, you can type in a stop to plot a visualization of the delays of this station.
+Whole Project on GitHub: https://github.com/fadri25/INF_PROG2_P05
