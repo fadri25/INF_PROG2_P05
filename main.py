@@ -12,12 +12,15 @@
 
 # -------Aufgaben
 # Fadri
-# Error handling:   - URL exisitiert nicht
-#                   - Datenverarbeitung Fehler
-#                   --> möglicherweise konzept erarbeiten
-# Auslagerung von unterem teil das nur Tkinter Fenster erstellt wird und Daten abgefragt werden
-# Threading für Berechnungen --> schneller
-# Sort in Visualization
+# Multiple Files
+# Station Code in Visualization
+# Research Autocomplete
+# Name concept for Classes
+
+# The report provided in this phase is good. In section 1.3 the report describes 3 challenges. 
+# I suggest describing the challenge you solve in section 1.3. 
+# The other challenges can be described as future work.
+
 
 # Sarah
 #vergleichen von den zwei Datensätzen einbauen -> Done
@@ -315,7 +318,7 @@ class Stop_calculation:
 class Downloader: # Downloader vgl. P04
     def __init__(self, url):
         self.url = url 
-        self.file_name = os.path.basename(url) #definiert den Namen des Dokuments so wie die url basis     
+        self.file_name = os.path.basename(url) #definiert den Namen des Dokuments so wie die url basis    
     
     def download(self, timeout = 6000000):
         try:
@@ -324,12 +327,12 @@ class Downloader: # Downloader vgl. P04
                 ur.urlretrieve(self.url, self.file_name)             
             else:
                 print(f"Taking file {self.file_name} from cache.")                    
-
+                
         except Exception as e:
             print(f'Error downloading file: {e}')
         
         file_path = os.path.abspath(self.file_name) #absoluter pfad vom cache file
-        return file_path   
+        return file_path
 
 class Timespan:
     def __init__(self, date_data):
