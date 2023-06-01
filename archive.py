@@ -100,3 +100,18 @@ if __name__ == '__main__':
         #return pd.DataFrame(results), pd.DataFrame(top_unreliable_stops), pd.DataFrame(data_delay)
         #datei wird aus cache geladen, read only
         #f = open(self.file_name, 'r')
+
+#start_date = input("Geben Sie die erste Woche vom vergleich an (leer lassen für aktuelles Datum dd.mm.yyyy): ") 
+#end_date = input("Geben Sie die zweite Woche vom Datensatz an (leer lassen um keinen Vergleich zu generieren): ")
+"""
+start_date = "20.03.2023"
+end_date = "10.01.2023"
+start_date_obj = timetransformations.Timespan(start_date)
+if end_date is not None:
+    end_date_obj = timetransformations.Timespan(end_date)
+else:
+    end_date_obj = None   
+start_sunday, start_saturday = start_date_obj.calculate_time()
+if end_date_obj is not None:
+    end_sunday, end_saturday = end_date_obj.calculate_time()
+"""
